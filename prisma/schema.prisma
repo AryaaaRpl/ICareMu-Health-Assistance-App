@@ -1,0 +1,78 @@
+// Konfigurasi koneksi ke Database Lokal (Docker)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ARSITEKTUR TABEL ICAREMU (MVP)
+// ==========================================
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  role       String   // 'admin_sekolah', 'guru_uks', 'orang_tua'
+  createdAt  DateTime @default(now())
+  
+  siswa      Siswa[]
+}
+
+model Siswa {
+  id             Int       @id @default(autoincrement())
+  user_id        Int?      
+  nisn           String    @unique
+  nama_lengkap   String
+  tanggal_lahir  DateTime?
+  jenis_kelamin  String    // 'L' atau 'P'
+  golongan_darah String?
+  nama_ortu      String?
+  no_wa_ortu     String?   
+  createdAt      DateTime  @default(now())
+
+  user           User?     @relation(fields: [user_id], references: [id])
+  rekamMedis     RekamMedis[]
+  reproduksi     KesehatanReproduksi[] // Relasi ke tabel menstruasi
+}
+
+// 1. MODUL: Smart Health Record & AI Analytics
+model RekamMedis {
+  id               Int      @id @default(autoincrement())
+  siswa_id         Int
+  tanggal_periksa  DateTime @default(now())
+  tinggi_badan     Float    // cm
+  berat_badan      Float    // kg
+  imt_score        Float?   // Hasil AI Rule-Based
+  status_kesehatan String?  // 'Normal', 'Risiko Stunting', 'Obesitas'
+  riwayat_alergi   String?
+  createdAt        DateTime @default(now())
+
+  siswa            Siswa    @relation(fields: [siswa_id], references: [id])
+}
+
+// 2. MODUL BARU: Smart UKS Inventory 
+model InventarisUKS {
+  id                  Int      @id @default(autoincrement())
+  nama_barang         String
+  kategori            String   // 'Obat', 'Alat Kesehatan', 'Kotak P3K', 'BHP'
+  stok                Int
+  tanggal_kedaluwarsa DateTime?
+  riwayat_penggunaan  String?
+  createdAt           DateTime @default(now())
+}
+
+// 3. MODUL BARU: Menstrual Health Monitoring 
+model KesehatanReproduksi {
+  id               Int      @id @default(autoincrement())
+  siswa_id         Int
+  tanggal_haid     DateTime
+  durasi_hari      Int?
+  catatan_keluhan  String?
+  ai_early_warning String?  // 'Normal' atau 'AI Amenore Detection' (Peringatan > 3 bulan)
+  createdAt        DateTime @default(now())
+
+  siswa            Siswa    @relation(fields: [siswa_id], references: [id])
+}
