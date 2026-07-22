@@ -29,7 +29,7 @@ class AuthController extends Controller
         if (filter_var($credential, FILTER_VALIDATE_EMAIL)) {
             if (Auth::attempt(['email' => $credential, 'password' => $password])) {
                 $request->session()->regenerate();
-                return redirect()->intended('dashboard');
+                return $this->redirectBasedOnRole();
             }
         } else {
             $siswa = Siswa::where('nisn', $credential)->first();
@@ -37,7 +37,7 @@ class AuthController extends Controller
                 if (Hash::check($password, $siswa->user->password)) {
                     Auth::login($siswa->user);
                     $request->session()->regenerate();
-                    return redirect()->intended('dashboard');
+                    return $this->redirectBasedOnRole();
                 }
             }
         }
@@ -87,7 +87,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard.siswa');
     }
 
     public function logout(Request $request)
@@ -96,5 +96,21 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
+    }
+
+    private function redirectBasedOnRole()
+    {
+        $role = auth()->user()->role;
+        switch ($role) {
+            case 'siswa':
+            case 'ortu':
+                return redirect()->route('dashboard.siswa');
+            case 'guru_uks':
+            case 'admin_sekolah':
+            case 'admin_super':
+                return redirect()->route('dashboard.uks');
+            default:
+                return redirect()->route('dashboard.siswa');
+        }
     }
 }

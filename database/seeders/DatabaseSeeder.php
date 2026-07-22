@@ -33,5 +33,8 @@ class DatabaseSeeder extends Seeder
             'nama_sekolah' => 'SMK Muhammadiyah 2 Genteng',
             'npsn' => '87654321',
         ]);
+        $this->call([
+            UserRoleSeeder::class,
+        ]);
     }
 }

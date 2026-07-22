@@ -11,7 +11,7 @@ class JadwalSkriningController extends Controller
     public function index()
     {
         $user = auth()->user();
-        if ($user->role === 'admin_super') {
+        if ($user->role === 'admin_super' || $user->role === 'admin_sekolah') {
             $jadwal_skrining = JadwalSkrining::with('sekolah')->latest()->get();
         } else {
             $jadwal_skrining = JadwalSkrining::with('sekolah')
@@ -20,7 +20,7 @@ class JadwalSkriningController extends Controller
                 ->get();
         }
         
-        return view('jadwal_skrining.index', compact('jadwal_skrining'));
+        return view('pages.school-screening.index', compact('jadwal_skrining'));
     }
 
     public function create()
@@ -29,7 +29,7 @@ class JadwalSkriningController extends Controller
         if (auth()->user()->role === 'admin_super') {
             $sekolahs = Sekolah::all();
         }
-        return view('jadwal_skrining.create', compact('sekolahs'));
+        return view('pages.school-screening.create', compact('sekolahs'));
     }
 
     public function store(Request $request)
@@ -66,7 +66,7 @@ class JadwalSkriningController extends Controller
                 abort(403);
             }
         }
-        return view('jadwal_skrining.edit', compact('jadwal_skrining', 'sekolahs'));
+        return view('pages.school-screening.edit', compact('jadwal_skrining', 'sekolahs'));
     }
 
     public function update(Request $request, JadwalSkrining $jadwal_skrining)
