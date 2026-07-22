@@ -16,4 +16,9 @@ class JadwalSkrining extends Model
     {
         return $this->belongsTo(Sekolah::class);
     }
+
+    public function pesertaSkrining()
+    {
+        return $this->hasMany(PesertaSkrining::class, 'jadwal_id');
+    }
 }

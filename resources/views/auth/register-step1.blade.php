@@ -21,11 +21,20 @@
             <p class="text-xs text-slate-500 mt-1">Lengkapi data diri Anda untuk bergabung dengan layanan kesehatan ICAREMU.</p>
         </div>
 
-        <form action="{{ route('register.step2') }}" method="GET" class="space-y-4">
+        @if ($errors->any())
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-600 font-semibold space-y-1">
+                @foreach ($errors->all() as $error)
+                    <div>• {{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
+        <form action="{{ route('register.step1.post') }}" method="POST" class="space-y-4">
+            @csrf
             <div class="space-y-1">
                 <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nama Lengkap</label>
                 <div class="relative">
-                    <input type="text" placeholder="Sesuai kartu pelajar..." required class="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
+                    <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" placeholder="Sesuai kartu pelajar..." required class="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
                     <span class="absolute left-3.5 top-3.5 text-slate-400">👤</span>
                 </div>
             </div>
@@ -33,7 +42,7 @@
             <div class="space-y-1">
                 <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">NISN</label>
                 <div class="relative">
-                    <input type="text" placeholder="Nomor Induk Siswa Nasional..." required class="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
+                    <input type="text" name="nisn" value="{{ old('nisn') }}" placeholder="Nomor Induk Siswa Nasional..." required class="w-full pl-10 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
                     <span class="absolute left-3.5 top-3.5 text-slate-400">📖</span>
                 </div>
             </div>
@@ -41,21 +50,21 @@
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Email</label>
-                    <input type="email" placeholder="siswa@sekolah.id" required class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
+                    <input type="email" name="email" value="{{ old('email') }}" placeholder="siswa@sekolah.id" required class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                    <input type="password" placeholder="Minimal 8 karakter..." required class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
+                    <input type="password" name="password" placeholder="Minimal 8 karakter..." required class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#186EF9]">
                 </div>
             </div>
 
             <div class="space-y-1">
                 <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pilih Sekolah Anda</label>
-                <select class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:border-[#186EF9]">
-                    <option>Cari asal sekolah Muhammadiyah...</option>
-                    <option>SMA Muhammadiyah 1 Yogyakarta</option>
-                    <option>SMA Muhammadiyah 2 Surabaya</option>
-                    <option>SMA Muhammadiyah 3 Jakarta</option>
+                <select name="sekolah_id" required class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:border-[#186EF9]">
+                    <option value="">Cari asal sekolah Muhammadiyah...</option>
+                    @foreach ($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}">{{ $sekolah->nama_sekolah }}</option>
+                    @endforeach
                 </select>
             </div>
 

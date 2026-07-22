@@ -18,7 +18,7 @@
 
         <div class="text-center">
             <h2 class="font-heading font-extrabold text-slate-900 text-2xl">Aktivasi Layanan ICAREMU</h2>
-            <p class="text-xs text-slate-500 mt-1">Scan kode QRIS di bawah ini untuk menyelesaikan pendaftaran.</p>
+            <p class="text-xs text-slate-500 mt-1">Scan kode QRIS di bawah ini untuk menyelesaikan pendaftaran (One-Time Registration).</p>
         </div>
 
         <!-- Total Price Card -->
@@ -52,8 +52,11 @@
             </div>
         </div>
 
-        <a href="{{ route('register.step3') }}" class="w-full py-4 rounded-2xl bg-[#186EF9] hover:bg-blue-600 text-white font-bold text-base transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
-            <span>Saya Sudah Bayar</span> ➔
-        </a>
+        <form action="{{ route('register.step2.post') }}" method="POST">
+            @csrf
+            <button type="submit" class="w-full py-4 rounded-2xl bg-[#186EF9] hover:bg-blue-600 text-white font-bold text-base transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+                <span>Saya Sudah Bayar (Aktivasi Akun)</span> ➔
+            </button>
+        </form>
     </div>
 </x-app.auth-layout>

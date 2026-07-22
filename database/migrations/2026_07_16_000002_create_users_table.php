@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('role', ['admin_super', 'admin_sekolah', 'guru_uks', 'siswa', 'ortu']);
-            $table->enum('payment_status', ['unpaid', 'paid'])->default('unpaid');
+            $table->enum('payment_status', ['unpaid', 'pending', 'paid'])->default('unpaid');
             $table->string('payment_order_id')->nullable();
             $table->timestamps();
         });

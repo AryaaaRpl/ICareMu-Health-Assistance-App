@@ -19,6 +19,7 @@ return new class extends Migration
             $table->float('imt_score');
             $table->string('status_risiko');
             $table->text('catatan_medis')->nullable();
+            $table->string('status_verifikasi')->default('Terverifikasi');
             $table->timestamps();
         });
     }

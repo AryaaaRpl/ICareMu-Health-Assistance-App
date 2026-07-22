@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CalculateImtAction;
+
+use App\Models\RekamMedis;
 use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\User;
@@ -41,19 +44,19 @@ class AuthController extends Controller
                 }
             }
         }
-        
+
         return back()->withErrors([
-            'credential' => 'Kredensial yang diberikan tidak cocok dengan data kami.',
+            'credential' => 'Kredensial (NISN / Email / Password) yang Anda masukkan salah.',
         ])->onlyInput('credential');
     }
 
-    public function showRegister()
+    public function showRegisterStep1()
     {
         $sekolahs = Sekolah::all();
-        return view('auth.register', compact('sekolahs'));
+        return view('auth.register-step1', compact('sekolahs'));
     }
 
-    public function register(Request $request)
+    public function processRegisterStep1(Request $request)
     {
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
@@ -61,10 +64,6 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'sekolah_id' => 'required|exists:sekolahs,id',
-            'tanggal_lahir' => 'required|date',
-            'nama_ortu' => 'nullable|string|max:255',
-            'no_wa_ortu' => 'nullable|string|max:20',
-            'golongan_darah' => 'nullable|in:A,B,AB,O',
         ]);
 
         $user = User::create([
@@ -72,20 +71,87 @@ class AuthController extends Controller
             'password' => Hash::make($request->input('password')),
             'role' => 'siswa',
             'sekolah_id' => $request->input('sekolah_id'),
+            'payment_status' => 'pending',
+            'payment_order_id' => 'ORDER-' . strtoupper(uniqid()),
         ]);
 
-        Siswa::create([
+        $siswa = Siswa::create([
             'user_id' => $user->id,
             'sekolah_id' => $request->input('sekolah_id'),
             'nama_lengkap' => $request->input('nama_lengkap'),
             'nisn' => $request->input('nisn'),
-            'tanggal_lahir' => $request->input('tanggal_lahir'),
-            'nama_ortu' => $request->input('nama_ortu'),
-            'no_wa_ortu' => $request->input('no_wa_ortu'),
-            'golongan_darah' => $request->input('golongan_darah'),
+            'tanggal_lahir' => now()->subYears(16)->toDateString(),
         ]);
 
         Auth::login($user);
+
+        return redirect()->route('register.step2');
+    }
+
+    public function showRegisterStep2()
+    {
+        $user = Auth::user();
+        return view('auth.register-step2', compact('user'));
+    }
+
+    public function processRegisterStep2(Request $request)
+    {
+        $user = Auth::user();
+        if ($user) {
+            $user->update([
+                'payment_status' => 'paid',
+            ]);
+        }
+
+        return redirect()->route('register.step3');
+    }
+
+    public function showRegisterStep3()
+    {
+        $user = Auth::user();
+        $siswa = $user?->siswa;
+        return view('auth.register-step3', compact('user', 'siswa'));
+    }
+
+    public function processRegisterStep3(Request $request)
+    {
+        $request->validate([
+            'nama_ortu' => 'required|string|max:255',
+            'no_wa_ortu' => 'required|string|max:20',
+            'tinggi_badan' => 'required|numeric|min:30|max:250',
+            'berat_badan' => 'required|numeric|min:5|max:300',
+            'golongan_darah' => 'nullable|string|in:A,B,AB,O',
+        ]);
+
+        $user = Auth::user();
+        $siswa = $user?->siswa;
+
+        if ($siswa) {
+            $siswa->update([
+                'nama_ortu' => $request->input('nama_ortu'),
+                'no_wa_ortu' => $request->input('no_wa_ortu'),
+                'golongan_darah' => $request->input('golongan_darah'),
+            ]);
+
+            $action = new CalculateImtAction();
+            $imtResult = $action->execute(
+                (float) $request->input('tinggi_badan'),
+                (float) $request->input('berat_badan')
+            );
+
+            RekamMedis::create([
+                'siswa_id' => $siswa->id,
+                'sekolah_id' => $siswa->sekolah_id,
+                'created_by' => $user->id,
+                'tanggal_periksa' => now()->toDateString(),
+                'tinggi_badan' => $request->input('tinggi_badan'),
+                'berat_badan' => $request->input('berat_badan'),
+                'imt_score' => $imtResult['imt'],
+                'status_risiko' => $imtResult['status_risiko'],
+                'catatan_medis' => 'Pemeriksaan Kesehatan Awal Registrasi Siswa.',
+                'status_verifikasi' => 'Terverifikasi',
+            ]);
+        }
 
         return redirect()->route('dashboard.siswa');
     }
