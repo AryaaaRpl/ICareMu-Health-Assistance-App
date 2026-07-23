@@ -17,12 +17,23 @@ return new class extends Migration
     {
         Schema::create('users', static function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('sekolah_id')->constrained('sekolahs')->cascadeOnDelete();
+            $table->foreignId('sekolah_id')->nullable()->constrained('sekolahs')->nullOnDelete();
+            $table->string('name');
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role'); // e.g. admin_super, admin_sekolah, guru, siswa
+            $table->string('role')->default('siswa'); // e.g. admin_super, admin_sekolah, guru, siswa
             $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
             $table->string('payment_order_id')->nullable();
+            
+            // Extra wizard / student fields
+            $table->string('nisn')->nullable();
+            $table->string('nama_wali')->nullable();
+            $table->string('no_wa_wali')->nullable();
+            $table->float('tinggi_badan')->nullable();
+            $table->float('berat_badan')->nullable();
+            $table->string('golongan_darah')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });

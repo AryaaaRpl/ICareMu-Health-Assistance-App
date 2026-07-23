@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventarisUks;
+use App\Models\JadwalSkrining;
 use App\Models\RekamMedis;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
@@ -28,7 +30,9 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $stoks = InventarisUks::where('stok', '<=', 20)->get();
+        $stoks = InventarisUks::where('jumlah', '<=', 20)
+            ->orWhere('stok', '<=', 20)
+            ->get();
 
         return view('dashboard.uks', compact(
             'jumlahKunjungan',
