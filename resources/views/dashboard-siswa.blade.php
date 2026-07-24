@@ -1,15 +1,5 @@
 <x-app-layout>
     <div class="space-y-8 max-w-7xl mx-auto">
-        <!-- Success Alert Notification -->
-        @if(session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold rounded-2xl flex items-center gap-3">
-                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
         <!-- 1. Hero Banner (Blue Card) -->
         <div class="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-3xl p-8 text-white shadow-xl">
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -26,7 +16,7 @@
                     </p>
                 </div>
                 <div>
-                    <a href="{{ route('skrining.siswa') }}"
+                    <a href="{{ route('skrining.index') }}"
                        class="px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-600 font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 group">
                         <span>Mulai Skrining</span>
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +61,7 @@
             </a>
 
             <!-- Item 2: Smart School Screening -->
-            <a href="{{ route('skrining.siswa') }}"
+            <a href="{{ route('skrining.index') }}"
                class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all flex items-center justify-between group">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-105 transition-transform">

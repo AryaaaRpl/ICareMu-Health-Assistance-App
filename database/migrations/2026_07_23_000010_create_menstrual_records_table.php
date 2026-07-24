@@ -15,14 +15,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('peserta_skrining', static function (Blueprint $table): void {
+        Schema::create('menstrual_records', static function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('sekolah_id')->constrained('sekolahs')->cascadeOnDelete();
-            $table->foreignId('jadwal_id')->constrained('jadwal_skrining')->cascadeOnDelete();
-            $table->foreignId('jadwal_skrining_id')->nullable()->constrained('jadwal_skrining')->cascadeOnDelete();
             $table->foreignId('siswa_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status_kehadiran'); // e.g. Hadir, Tidak Hadir, Izin, Sakit
-            $table->text('catatan_hasil')->nullable();
+            $table->date('tanggal_mulai');
+            $table->date('tanggal_selesai')->nullable();
+            $table->integer('tingkat_nyeri')->default(1); // 1 (sangat ringan) sampai 5 (sangat hebat)
             $table->text('catatan')->nullable();
             $table->timestamps();
         });
@@ -35,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('peserta_skrining');
+        Schema::dropIfExists('menstrual_records');
     }
 };

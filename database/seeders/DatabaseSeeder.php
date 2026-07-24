@@ -2,10 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Models\ArtikelIsmuba;
+use App\Models\InventarisUks;
+use App\Models\JadwalSkrining;
+use App\Models\MenstrualRecord;
+use App\Models\PesertaSkrining;
+use App\Models\RekamMedis;
+use App\Models\Sekolah;
+use App\Models\Siswa;
 use App\Models\User;
+use Faker\Factory as Faker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,11 +26,244 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Super Admin',
-            'email' => 'admin_super@icaremu.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin_super',
-        ]);
+        $faker = Faker::create('id_ID');
+
+        // 1. Create 1 Main Tenant (sekolah_id)
+        $sekolah = Sekolah::firstOrCreate(
+            ['npsn' => '20109988'],
+            ['nama_sekolah' => 'SMP Negeri 1 Jakarta']
+        );
+
+        // 2. Create Admin UKS user for login
+        $adminUks = User::updateOrCreate(
+            ['email' => 'admin_uks@icaremu.com'],
+            [
+                'sekolah_id' => $sekolah->id,
+                'name' => 'Petugas UKS (Admin)',
+                'password' => Hash::make('password'),
+                'role' => 'admin_uks',
+                'jenis_kelamin' => 'P',
+                'payment_status' => 'paid',
+            ]
+        );
+
+        // Super Admin user
+        User::updateOrCreate(
+            ['email' => 'admin_super@icaremu.com'],
+            [
+                'sekolah_id' => $sekolah->id,
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'role' => 'super_admin',
+                'jenis_kelamin' => 'L',
+                'payment_status' => 'paid',
+            ]
+        );
+
+        // 3. Create 20 Dummy Students (Siswa) - 10 Male ('L') and 10 Female ('P')
+        $students = collect();
+        for ($i = 1; $i <= 20; $i++) {
+            $isFemale = $i % 2 === 0;
+            $gender = $isFemale ? 'P' : 'L';
+            $name = $isFemale ? $faker->name('female') : $faker->name('male');
+            $nisn = sprintf('00%08d', $i + 12345000);
+
+            $user = User::factory()->create([
+                'sekolah_id' => $sekolah->id,
+                'name' => $name,
+                'email' => "siswa{$i}@icaremu.sch.id",
+                'role' => 'siswa',
+                'jenis_kelamin' => $gender,
+                'nisn' => $nisn,
+                'nama_wali' => $faker->name(),
+                'no_wa_wali' => '08' . $faker->numberBetween(100000000, 999999999),
+            ]);
+
+            // Sync with Siswa table if exists
+            if (Schema::hasTable('siswa')) {
+                Siswa::create([
+                    'user_id' => $user->id,
+                    'sekolah_id' => $sekolah->id,
+                    'nama_lengkap' => $user->name,
+                    'nisn' => $nisn,
+                    'tanggal_lahir' => now()->subYears(rand(12, 16))->format('Y-m-d'),
+                    'nama_ortu' => $user->nama_wali,
+                    'no_wa_ortu' => $user->no_wa_wali,
+                    'golongan_darah' => $user->golongan_darah ?? 'O',
+                ]);
+            }
+
+            $students->push($user);
+        }
+
+        // 4. Attach 30 Rekam Medis records randomly to those students
+        for ($i = 0; $i < 30; $i++) {
+            $student = $students->random();
+            $siswaRecord = Schema::hasTable('siswa') ? Siswa::where('user_id', $student->id)->first() : null;
+            $siswaId = $siswaRecord ? $siswaRecord->id : $student->id;
+
+            RekamMedis::factory()->create([
+                'sekolah_id' => $sekolah->id,
+                'siswa_id' => $siswaId,
+            ]);
+        }
+
+        // 5. Create 3 Jadwal Skrining, and attach random students as PesertaSkrining
+        $screeningTypes = [
+            [
+                'jenis' => 'Umum',
+                'nama' => 'Skrining Kesehatan Umum Berkala',
+                'tanggal' => now()->subDays(14)->format('Y-m-d'),
+                'status' => 'completed',
+                'lokasi' => 'Aula SMP Negeri 1 Jakarta',
+            ],
+            [
+                'jenis' => 'Gigi',
+                'nama' => 'Skrining Kesehatan Gigi & Mulut',
+                'tanggal' => now()->addDays(5)->format('Y-m-d'),
+                'status' => 'scheduled',
+                'lokasi' => 'Ruang UKS Utama',
+            ],
+            [
+                'jenis' => 'Mata',
+                'nama' => 'Skrining Indera Penglihatan (Mata)',
+                'tanggal' => now()->addDays(15)->format('Y-m-d'),
+                'status' => 'scheduled',
+                'lokasi' => 'Ruang Kelas 8A',
+            ],
+        ];
+
+        foreach ($screeningTypes as $screening) {
+            $jadwal = JadwalSkrining::factory()->create([
+                'sekolah_id' => $sekolah->id,
+                'jenis_skrining' => $screening['jenis'],
+                'nama_kegiatan' => $screening['nama'],
+                'tanggal_pelaksanaan' => $screening['tanggal'],
+                'tanggal' => $screening['tanggal'],
+                'status' => $screening['status'],
+                'lokasi' => $screening['lokasi'],
+            ]);
+
+            // Attach random subset of students (10-15 students per screening)
+            $participatingStudents = $students->random(rand(10, 15));
+            foreach ($participatingStudents as $studentUser) {
+                $siswaRecord = Schema::hasTable('siswa') ? Siswa::where('user_id', $studentUser->id)->first() : null;
+                $siswaId = $siswaRecord ? $siswaRecord->id : $studentUser->id;
+
+                PesertaSkrining::factory()->create([
+                    'sekolah_id' => $sekolah->id,
+                    'jadwal_id' => $jadwal->id,
+                    'jadwal_skrining_id' => $jadwal->id,
+                    'siswa_id' => $siswaId,
+                ]);
+            }
+        }
+
+        // 6. Create 15 Inventaris UKS items
+        $inventarisPreset = [
+            ['nama' => 'Paracetamol 500mg', 'kategori' => 'Obat', 'satuan' => 'Strip', 'stok' => 50, 'kondisi' => 'Baik'],
+            ['nama' => 'Betadine Antiseptik 60ml', 'kategori' => 'Obat', 'satuan' => 'Botol', 'stok' => 15, 'kondisi' => 'Baik'],
+            ['nama' => 'Perban Kasa Steril 10cm', 'kategori' => 'Logistik', 'satuan' => 'Roll', 'stok' => 40, 'kondisi' => 'Baik'],
+            ['nama' => 'Thermometer Digital', 'kategori' => 'Alat Medis', 'satuan' => 'Unit', 'stok' => 5, 'kondisi' => 'Baik'],
+            ['nama' => 'Thermometer Raksa (Cadangan)', 'kategori' => 'Alat Medis', 'satuan' => 'Unit', 'stok' => 2, 'kondisi' => 'Rusak'],
+            ['nama' => 'Minyak Kayu Putih 100ml', 'kategori' => 'Obat', 'satuan' => 'Botol', 'stok' => 12, 'kondisi' => 'Baik'],
+            ['nama' => 'Oralit Sachet', 'kategori' => 'Obat', 'satuan' => 'Box', 'stok' => 8, 'kondisi' => 'Baik'],
+            ['nama' => 'Rivanol 300ml', 'kategori' => 'Obat', 'satuan' => 'Botol', 'stok' => 6, 'kondisi' => 'Baik'],
+            ['nama' => 'Alcohol 70% 100ml', 'kategori' => 'Obat', 'satuan' => 'Botol', 'stok' => 10, 'kondisi' => 'Baik'],
+            ['nama' => 'Masker Medis 3-Ply', 'kategori' => 'Logistik', 'satuan' => 'Box', 'stok' => 20, 'kondisi' => 'Baik'],
+            ['nama' => 'Plester Luka Hansaplast', 'kategori' => 'Logistik', 'satuan' => 'Box', 'stok' => 15, 'kondisi' => 'Baik'],
+            ['nama' => 'Stetoskop General Care', 'kategori' => 'Alat Medis', 'satuan' => 'Unit', 'stok' => 3, 'kondisi' => 'Baik'],
+            ['nama' => 'Tensimeter Digital Omron', 'kategori' => 'Alat Medis', 'satuan' => 'Unit', 'stok' => 2, 'kondisi' => 'Baik'],
+            ['nama' => 'Timbangan Badan Digital', 'kategori' => 'Alat Medis', 'satuan' => 'Unit', 'stok' => 2, 'kondisi' => 'Rusak'],
+            ['nama' => 'Kapas Steril 50g', 'kategori' => 'Logistik', 'satuan' => 'Pack', 'stok' => 25, 'kondisi' => 'Baik'],
+        ];
+
+        foreach ($inventarisPreset as $item) {
+            InventarisUks::factory()->create([
+                'sekolah_id' => $sekolah->id,
+                'nama_barang' => $item['nama'],
+                'kategori' => $item['kategori'],
+                'satuan' => $item['satuan'],
+                'jumlah' => $item['stok'],
+                'stok' => $item['stok'],
+                'kondisi' => $item['kondisi'],
+            ]);
+        }
+
+        // 7. Seed 5 Artikel ISMUBA (Kesehatan Islami)
+        $artikelIsmubaData = [
+            [
+                'title' => 'Adab Menjenguk Orang Sakit dalam Islam',
+                'slug' => 'adab-menjenguk-orang-sakit-dalam-islam',
+                'kategori' => 'Adab Kebersihan',
+                'content' => "Menjenguk saudara muslim yang sedang sakit merupakan salah satu kewajiban dan amalan yang sangat mulia dalam Islam.\n\nDalam sebuah hadits, Rasulullah SAW bersabda: 'Hak seorang muslim atas muslim lainnya ada lima: menjawab salam, menjenguk orang sakit, mengantar jenazah, memenuhi undangan, dan mendoakan yang bersin.' (HR. Bukhari dan Muslim).\n\nBeberapa Adab Utama Menjenguk Orang Sakit:\n1. Mendoakan Kesembuhan: Membaca doa kesembuhan 'Laa ba'-sa thahuurun in syaa-allah' atau 'As-alullahal 'azhiim rabbal 'arsyil 'azhiim an yasyfiyak'.\n2. Memberikan Motivasi & Ketenangan: Ucapkan kata-kata yang membesarkan hati dan menenangkan pikiran pasien.\n3. Menjaga Waktu Kunjungan: Jangan terlalu lama berkunjung agar si sakit dapat beristirahat cukup.\n4. Menjaga Kebersihan UKS: Cuci tangan sebelum dan sesudah berkunjung demi kesehatan bersama.",
+                'image_url' => 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=600&auto=format&fit=crop&q=80',
+            ],
+            [
+                'title' => 'Manfaat Habbatussauda dan Madu menurut Thibbun Nabawi',
+                'slug' => 'manfaat-habbatussauda-dan-madu-menurut-thibbun-nabawi',
+                'kategori' => 'Thibbun Nabawi',
+                'content' => "Thibbun Nabawi mengutamakan pengobatan alami yang sesuai dengan tuntunan Rasulullah SAW untuk menjaga kekebalan tubuh siswa.\n\n1. Habbatussauda (Jintan Hitam)\nRasulullah SAW bersabda: 'Sesungguhnya pada jintan hitam terdapat penyembuh bagi segala penyakit, kecuali kematian.' (HR. Bukhari). Habbatussauda kaya akan thymoquinone yang terbukti meningkatkan imunitas tubuh dan melawan peradangan.\n\n2. Madu Alami\nAllah SWT berfirman dalam Surah An-Nahl ayat 69: 'Dari perut lebah itu keluar minuman (madu) yang bermacam-macam warnanya, di dalamnya terdapat obat yang menyembuhkan bagi manusia.' Madu bekerja sebagai antiseptik alami, meredakan batuk, dan memberikan energi instan bagi siswa di UKS.",
+                'image_url' => 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?w=600&auto=format&fit=crop&q=80',
+            ],
+            [
+                'title' => 'Kebersihan Adalah Sebagian dari Iman (Thaharah di UKS)',
+                'slug' => 'kebersihan-adalah-sebagian-dari-iman-thaharah-di-uks',
+                'kategori' => 'Adab Kebersihan',
+                'content' => "Islam adalah agama yang sangat mengagungkan kebersihan. Rasulullah SAW bersabda: 'Thaharah (kebersihan) itu adalah separuh dari iman.' (HR. Muslim).\n\nPenerapan Thaharah & Kebersihan di Lingkungan UKS Sekolah:\n- Menjaga Sanitasi Ruang UKS: Memastikan peralatan medis steril, tempat tidur rapi, dan lantai selalu bersih.\n- Cuci Tangan 6 Langkah: Membiasakan mencuci tangan pakai sabun dan air mengalir sebelum & sesudah menangani pasien.\n- Menjaga Kebersihan Diri (Hygiene): Memotong kuku, memakai pakaian bersih, dan menjaga wudhu agar selalu segar dan sehat.",
+                'image_url' => 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=600&auto=format&fit=crop&q=80',
+            ],
+            [
+                'title' => 'Panduan Fiqih Bersuci dan Shalat bagi Siswa Sakit',
+                'slug' => 'panduan-fiqih-bersuci-dan-shalat-bagi-siswa-sakit',
+                'kategori' => 'Fiqih Sakit',
+                'content' => "Sakit bukanlah penghalang bagi seorang muslim untuk menjalankan ibadah shalat 5 waktu. Allah SWT memberikan kemudahan (rukhshah) bagi hamba-Nya yang sedang uzur atau sakit.\n\n1. Tata Cara Bersuci (Tayamum)\nJika siswa tidak mampu terkena air atau dalam kondisi infus/perban, berwudhu dapat digantikan dengan Tayamum menggunakan debu yang suci.\n\n2. Cara Shalat Saat Sakit\n- Shalat Duduk: Jika tidak sanggup berdiri.\n- Shalat Berbaring: Jika tidak sanggup duduk, posisi berbaring miring menghadap kiblat atau terlentang dengan isyarat.\n\nPrinsip Fiqih: 'Agama itu mudah, dan Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya.'",
+                'image_url' => 'https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&auto=format&fit=crop&q=80',
+            ],
+            [
+                'title' => 'Manfaat Bekam (Cupping) dan Anjuran Menjaga Kesehatan menurut Rasulullah SAW',
+                'slug' => 'manfaat-bekam-dan-anjuran-menjaga-kesehatan',
+                'kategori' => 'Thibbun Nabawi',
+                'content' => "Menjaga kesehatan tubuh adalah bentuk rasa syukur atas amanah nikmat sehat dari Allah SWT.\n\nSalah satu metode Thibbun Nabawi yang direkomendasikan adalah Bekam (Hijamah). Rasulullah SAW bersabda: 'Sebaik-baik pengobatan yang kalian lakukan adalah bekam.' (HR. Bukhari).\n\nManfaat Bekam & Pola Hidup Sehat Rasulullah:\n1. Membuang Toksin / Darah Kotor: Membantu melancarkan sirkulasi darah dan meredakan ketegangan otot.\n2. Pola Makan Seimbang: Berhenti makan sebelum kenyang dan menghindari konsumsi makanan berlebihan.\n3. Olahraga Sunnah: Membiasakan jalan kaki, berkuda, memanah, atau berenang untuk melatih fisik siswa.",
+                'image_url' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
+            ],
+        ];
+
+        foreach ($artikelIsmubaData as $art) {
+            ArtikelIsmuba::updateOrCreate(
+                ['slug' => $art['slug']],
+                [
+                    'title' => $art['title'],
+                    'kategori' => $art['kategori'],
+                    'content' => $art['content'],
+                    'image_url' => $art['image_url'],
+                ]
+            );
+        }
+
+        // 8. Seed Menstrual Records for Female Students (AI Amenorrhea Trigger)
+        $femaleStudents = User::where('role', 'siswa')->where('jenis_kelamin', 'P')->get();
+
+        foreach ($femaleStudents as $index => $femaleStudent) {
+            if ($index === 0) {
+                // First female student (siswa2@icaremu.sch.id): Last period 4 months ago (>90 days -> triggers AI Amenorrhea Warning!)
+                MenstrualRecord::create([
+                    'siswa_id' => $femaleStudent->id,
+                    'tanggal_mulai' => now()->subMonths(4)->format('Y-m-d'),
+                    'tanggal_selesai' => now()->subMonths(4)->addDays(5)->format('Y-m-d'),
+                    'tingkat_nyeri' => 4,
+                    'catatan' => 'Siklus terhenti lama, kram perut ringan 4 bulan lalu.',
+                ]);
+            } else {
+                // Other female students: Normal period 20 days ago
+                MenstrualRecord::create([
+                    'siswa_id' => $femaleStudent->id,
+                    'tanggal_mulai' => now()->subDays(20)->format('Y-m-d'),
+                    'tanggal_selesai' => now()->subDays(15)->format('Y-m-d'),
+                    'tingkat_nyeri' => rand(1, 3),
+                    'catatan' => 'Siklus haid teratur.',
+                ]);
+            }
+        }
     }
 }

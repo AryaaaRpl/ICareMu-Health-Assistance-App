@@ -19,9 +19,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('sekolah_id')->constrained('sekolahs')->cascadeOnDelete();
             $table->string('jenis_skrining');
+            $table->string('nama_kegiatan')->nullable();
             $table->date('tanggal_pelaksanaan');
+            $table->date('tanggal')->nullable();
             $table->string('lokasi');
             $table->string('status'); // e.g. scheduled, ongoing, completed, cancelled
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

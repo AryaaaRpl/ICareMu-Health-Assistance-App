@@ -19,8 +19,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('sekolah_id')->constrained('sekolahs')->cascadeOnDelete();
             $table->string('nama_barang');
-            $table->string('kategori'); // e.g. obat, alat_medis, logistik
-            $table->integer('stok');
+            $table->string('kategori'); // e.g. Obat, Alat Medis, Logistik
+            $table->integer('jumlah')->default(0);
+            $table->integer('stok')->default(0);
+            $table->string('satuan')->nullable(); // e.g. Strip, Botol, Unit, Box
+            $table->string('kondisi')->default('Baik'); // e.g. Baik, Rusak
+            $table->text('keterangan')->nullable();
             $table->date('tanggal_kedaluwarsa')->nullable();
             $table->timestamps();
         });

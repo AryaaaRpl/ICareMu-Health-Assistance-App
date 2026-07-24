@@ -22,10 +22,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('siswa'); // e.g. admin_super, admin_sekolah, guru, siswa
+            $table->enum('role', ['super_admin', 'admin_uks', 'petugas_uks', 'admin_super', 'siswa'])->default('siswa');
+            $table->enum('jenis_kelamin', ['L', 'P'])->default('P');
             $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
             $table->string('payment_order_id')->nullable();
-            
+
             // Extra wizard / student fields
             $table->string('nisn')->nullable();
             $table->string('nama_wali')->nullable();
