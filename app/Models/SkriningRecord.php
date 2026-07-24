@@ -15,16 +15,23 @@ class SkriningRecord extends Model
     protected $table = 'skrining_records';
 
     protected $fillable = [
-        'siswa_id',
         'sekolah_id',
+        'siswa_id',
         'suhu_tubuh',
-        'tekanan_darah',
-        'keluhan',
-        'status_kesehatan',
+        'gejala',
+        'keluhan_tambahan',
+        'ai_status',
+        'ai_recommendation',
+        'tindakan_uks',
+        'obat_diberikan',
+        'waktu_ditindak',
+        'status_akhir',
     ];
 
     protected $casts = [
         'suhu_tubuh' => 'float',
+        'gejala' => 'array',
+        'waktu_ditindak' => 'datetime',
     ];
 
     public function siswa(): BelongsTo

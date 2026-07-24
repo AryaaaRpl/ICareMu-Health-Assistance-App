@@ -34,7 +34,24 @@ class DashboardController extends Controller
                 ->orWhere('kondisi', 'Rusak');
         })->count();
 
-        // 2. Upcoming 3 Screening Schedules
+        // 2. Today's Skrining Records for Live Triage Monitor
+        $skriningHariIni = \App\Models\SkriningRecord::with(['siswa' => function ($query) {
+            $query->select('id', 'name', 'nama_lengkap', 'kelas');
+        }])
+            ->whereDate('created_at', today())
+            ->orderByRaw("
+                CASE 
+                    WHEN ai_status = 'darurat' THEN 1
+                    WHEN ai_status = 'observasi_uks' THEN 2
+                    WHEN ai_status = 'pulang' THEN 3
+                    WHEN ai_status = 'sehat' THEN 4
+                    ELSE 5
+                END ASC
+            ")
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 3. Upcoming 3 Screening Schedules
         $jadwalSkrining = JadwalSkrining::whereDate('tanggal_pelaksanaan', '>=', now()->toDateString())
             ->orWhereDate('tanggal', '>=', now()->toDateString())
             ->orderBy('tanggal_pelaksanaan', 'asc')
@@ -97,7 +114,8 @@ class DashboardController extends Controller
             'grafikKeluhan',
             'grafikKunjungan',
             'kunjungans',
-            'stoks'
+            'stoks',
+            'skriningHariIni'
         ));
     }
 

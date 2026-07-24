@@ -74,14 +74,15 @@
             ],
         ];
 
-        // Dummy data for dropdown options if $siswas not passed
-        $siswas = $siswas ?? [
-            (object)['id' => 101, 'nama' => 'Ahmad Faiz Al-Fatih (X MIPA 1)'],
-            (object)['id' => 102, 'nama' => 'Siti Aminah Az-Zahra (XII IPS 2)'],
-            (object)['id' => 103, 'nama' => 'Budi Santoso Prabowo (XI MIPA 3)'],
-            (object)['id' => 104, 'nama' => 'Nurul Huda Rahmawati (X MIPA 2)'],
-            (object)['id' => 105, 'nama' => 'Rizqi Pratama Wijaya (XI MIPA 1)'],
+        // Dummy data for dropdown options if $siswaList not passed
+        $siswaList = $siswaList ?? $siswas ?? [
+            (object)['id' => 101, 'name' => 'Ahmad Faiz Al-Fatih (X MIPA 1)'],
+            (object)['id' => 102, 'name' => 'Siti Aminah Az-Zahra (XII IPS 2)'],
+            (object)['id' => 103, 'name' => 'Budi Santoso Prabowo (XI MIPA 3)'],
+            (object)['id' => 104, 'name' => 'Nurul Huda Rahmawati (X MIPA 2)'],
+            (object)['id' => 105, 'name' => 'Rizqi Pratama Wijaya (XI MIPA 1)'],
         ];
+        $siswas = $siswaList;
     @endphp
 
     <div x-data="{ openModal: false, search: '', statusFilter: '' }" class="space-y-6">
@@ -129,7 +130,7 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL SKRINING</span>
-                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ count($rekam_medis) }}</h4>
+                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ $totalSkrining ?? count($records ?? $rekam_medis ?? []) }}</h4>
                     <p class="text-[11px] text-slate-500 font-medium">Siswa terdata</p>
                 </div>
             </div>
@@ -142,8 +143,8 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">STATUS NORMAL</span>
-                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">3</h4>
-                    <p class="text-[11px] text-emerald-600 font-medium">60% dari total</p>
+                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ $statusNormal ?? 0 }}</h4>
+                    <p class="text-[11px] text-emerald-600 font-medium">Hasil Triage Sehat</p>
                 </div>
             </div>
 
@@ -155,8 +156,8 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">PERLU PERHATIAN</span>
-                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">1</h4>
-                    <p class="text-[11px] text-amber-600 font-medium">Suhu > 37.5°C</p>
+                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ $perluPerhatian ?? 0 }}</h4>
+                    <p class="text-[11px] text-amber-600 font-medium">Suhu > 37.5°C / Observasi</p>
                 </div>
             </div>
 
@@ -168,7 +169,7 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">TINDAKAN DIRUJUKS</span>
-                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">1</h4>
+                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ $tindakanDirujuk ?? 0 }}</h4>
                     <p class="text-[11px] text-rose-500 font-medium">Membutuhkan penanganan lanjut</p>
                 </div>
             </div>
@@ -205,98 +206,115 @@
                             <th class="py-4 px-6">Nama Siswa</th>
                             <th class="py-4 px-6">Keluhan Utama</th>
                             <th class="py-4 px-6">Suhu</th>
-                            <th class="py-4 px-6">IMT Score</th>
+                            <th class="py-4 px-6">Status AI</th>
                             <th class="py-4 px-6">Status Penanganan</th>
                             <th class="py-4 px-6 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
-                        @foreach($rekam_medis as $rm)
+                        @forelse($records ?? $rekam_medis as $row)
+                            @php
+                                $tgl = $row->created_at ? $row->created_at->format('d M Y, H:i') : (isset($row->tanggal) ? (is_string($row->tanggal) ? \Carbon\Carbon::parse($row->tanggal)->format('d M Y') : $row->tanggal->format('d M Y')) : '-');
+                                $namaSiswa = $row->siswa ? ($row->siswa->name ?? $row->siswa->nama_lengkap ?? $row->siswa->nama ?? 'Siswa') : 'Siswa #'.($row->siswa_id ?? '');
+                                $nisnSiswa = $row->siswa ? ($row->siswa->nisn ?? '-') : '-';
+                                $suhuVal = (float)($row->suhu_tubuh ?? $row->suhu ?? 36.5);
+                                $isHighTemp = $suhuVal > 37.5;
+                                $gejalaText = is_array($row->gejala) ? implode(', ', $row->gejala) : ($row->gejala ?? $row->keluhan_utama ?? '-');
+                                $tindakanText = $row->tindakan_uks ?? $row->penanganan ?? null;
+                                $statusAkhirText = $row->status_akhir ? str_replace('_', ' ', $row->status_akhir) : ($row->status ?? 'Selesai');
+                            @endphp
                             <tr class="hover:bg-slate-50/60 transition duration-150">
                                 <!-- Tanggal -->
                                 <td class="py-4 px-6 font-semibold text-slate-600 whitespace-nowrap">
-                                    {{ is_string($rm->tanggal) ? \Carbon\Carbon::parse($rm->tanggal)->format('d M Y') : $rm->tanggal->format('d M Y') }}
+                                    {{ $tgl }}
                                 </td>
 
                                 <!-- Nama Siswa -->
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs uppercase border border-slate-200">
-                                            {{ substr($rm->siswa->nama ?? 'S', 0, 2) }}
+                                            {{ strtoupper(substr($namaSiswa, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <div class="font-bold text-slate-900">{{ $rm->siswa->nama ?? '-' }}</div>
-                                            <div class="text-[11px] text-slate-400 font-mono">NISN: {{ $rm->siswa->nisn ?? '-' }}</div>
+                                            <div class="font-bold text-slate-900">{{ $namaSiswa }}</div>
+                                            <div class="text-[11px] text-slate-400 font-mono">NISN: {{ $nisnSiswa }}</div>
                                         </div>
                                     </div>
                                 </td>
 
                                 <!-- Keluhan Utama -->
                                 <td class="py-4 px-6 max-w-xs">
-                                    <p class="text-slate-700 font-medium truncate" title="{{ $rm->keluhan_utama }}">
-                                        {{ $rm->keluhan_utama }}
+                                    <p class="text-slate-700 font-medium truncate" title="{{ $gejalaText }}">
+                                        {{ $gejalaText }}
                                     </p>
-                                    @if(isset($rm->penanganan) && $rm->penanganan)
+                                    @if($tindakanText)
                                         <p class="text-[11px] text-slate-400 truncate mt-0.5">
-                                            <span class="font-semibold text-slate-500">Tindakan:</span> {{ $rm->penanganan }}
+                                            <span class="font-semibold text-slate-500">Tindakan:</span> {{ $tindakanText }}
                                         </p>
                                     @endif
                                 </td>
 
-                                <!-- Suhu (with color indicator e.g., red if > 37.5) -->
+                                <!-- Suhu -->
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    @php
-                                        $suhuVal = (float)$rm->suhu;
-                                        $isHighTemp = $suhuVal > 37.5;
-                                    @endphp
                                     <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border {{ $isHighTemp ? 'bg-rose-50 text-rose-600 border-rose-200 animate-pulse' : 'bg-emerald-50 text-emerald-600 border-emerald-200' }}">
                                         <span class="w-2 h-2 rounded-full {{ $isHighTemp ? 'bg-rose-500' : 'bg-emerald-500' }}"></span>
                                         <span>{{ number_format($suhuVal, 1) }} °C</span>
                                     </div>
                                 </td>
 
-                                <!-- IMT Score -->
+                                <!-- Status AI -->
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    @php
-                                        $imt = (float)($rm->imt_score ?? 0);
-                                        if ($imt == 0 && isset($rm->tinggi_badan) && isset($rm->berat_badan) && $rm->tinggi_badan > 0) {
-                                            $tbM = $rm->tinggi_badan / 100;
-                                            $imt = round($rm->berat_badan / ($tbM * $tbM), 1);
-                                        }
-                                    @endphp
-                                    <div>
-                                        <span class="font-extrabold text-slate-800">{{ $imt > 0 ? $imt : '-' }}</span>
-                                        @if(isset($rm->tinggi_badan) && isset($rm->berat_badan))
-                                            <span class="text-[11px] text-slate-400 block">({{ $rm->tinggi_badan }}cm / {{ $rm->berat_badan }}kg)</span>
-                                        @endif
-                                    </div>
+                                    @if(($row->ai_status ?? null) === 'sehat')
+                                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            Sehat
+                                        </span>
+                                    @elseif(($row->ai_status ?? null) === 'pulang')
+                                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                                            Pulang
+                                        </span>
+                                    @elseif(in_array(($row->ai_status ?? null), ['observasi_uks', 'darurat']))
+                                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                                            🚨 {{ strtoupper(str_replace('_', ' ', $row->ai_status)) }}
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                                            -
+                                        </span>
+                                    @endif
                                 </td>
 
                                 <!-- Status Penanganan -->
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border {{ $rm->status_color ?? 'bg-slate-100 text-slate-600 border-slate-200' }}">
-                                        {{ $rm->status }}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border uppercase bg-slate-100 text-slate-700 border-slate-200">
+                                        {{ $statusAkhirText }}
                                     </span>
                                 </td>
 
                                 <!-- Action -->
                                 <td class="py-4 px-6 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button title="Lihat Detail" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                        </button>
-                                        <button title="Hapus" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition duration-150">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
+                                        @if(isset($row->id) && $row instanceof \App\Models\SkriningRecord)
+                                            <a href="{{ route('skrining.show', $row->id) }}" title="Lihat Detail & Tindakan" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition duration-150 inline-block">
+                                                Tindak UKS
+                                            </a>
+                                        @else
+                                            <button title="Lihat Detail" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-slate-400 font-medium">
+                                    Belum ada data rekam medis tercatat.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -346,6 +364,16 @@
                 <form action="{{ route('rekam-medis.store') }}" method="POST" class="p-6 space-y-5">
                     @csrf
 
+                    @if ($errors->any())
+                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl text-xs font-semibold">
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <!-- Field: siswa_id (select dropdown) -->
                     <div>
                         <label for="siswa_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -353,8 +381,8 @@
                         </label>
                         <select name="siswa_id" id="siswa_id" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
                             <option value="" disabled selected>-- Pilih Siswa --</option>
-                            @foreach($siswas as $siswa)
-                                <option value="{{ $siswa->id }}">{{ $siswa->nama }}</option>
+                            @foreach($siswaList as $siswa)
+                                <option value="{{ $siswa->id }}">{{ $siswa->name ?? $siswa->nama_lengkap ?? $siswa->nama }}</option>
                             @endforeach
                         </select>
                     </div>

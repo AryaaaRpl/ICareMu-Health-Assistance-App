@@ -33,7 +33,11 @@ class TenantScope implements Scope
             return;
         }
 
-        // Apply the tenant scope using the resolved tenant ID from context.
-        $builder->where('sekolah_id', TenantContext::getTenantId());
+        // Resolve tenant ID with fallbacks for authenticated user or primary school
+        $tenantId = TenantContext::getTenantId() ?? auth()->user()?->sekolah_id;
+
+        if ($tenantId !== null) {
+            $builder->where($model->getTable() . '.sekolah_id', $tenantId);
+        }
     }
 }

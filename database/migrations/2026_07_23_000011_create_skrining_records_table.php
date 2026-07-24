@@ -18,11 +18,11 @@ return new class extends Migration
         Schema::create('skrining_records', static function (Blueprint $table): void {
             $table->id();
             $table->foreignId('siswa_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('sekolah_id')->nullable()->constrained('sekolahs')->nullOnDelete();
-            $table->float('suhu_tubuh')->default(36.5);
-            $table->string('tekanan_darah')->nullable();
-            $table->text('keluhan')->nullable();
-            $table->enum('status_kesehatan', ['sehat', 'sakit_ringan', 'butuh_penanganan'])->default('sehat');
+            $table->float('suhu_tubuh');
+            $table->json('gejala')->nullable();
+            $table->text('keluhan_tambahan')->nullable();
+            $table->enum('ai_status', ['sehat', 'observasi_uks', 'pulang', 'darurat'])->nullable();
+            $table->text('ai_recommendation')->nullable();
             $table->timestamps();
         });
     }

@@ -35,10 +35,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/rekam-medis', [RekamMedisWebController::class, 'index'])->name('rekam-medis.index');
         Route::post('/rekam-medis', [RekamMedisWebController::class, 'store'])->name('rekam-medis.store');
 
-        // Skrining Kesehatan Admin
-        Route::get('/skrining', [SkriningWebController::class, 'index'])->name('skrining.index');
-        Route::post('/skrining/jadwal', [SkriningWebController::class, 'storeJadwal'])->name('skrining.jadwal.store');
-        Route::post('/skrining/peserta', [SkriningWebController::class, 'storePeserta'])->name('skrining.peserta.store');
+        // Skrining Kesehatan Admin & Detail Triage
+        Route::get('/skrining', [\App\Http\Controllers\SkriningController::class, 'indexJadwal'])->name('skrining.index');
+        Route::get('/skrining/{skrining}', [\App\Http\Controllers\SkriningController::class, 'show'])->name('skrining.show');
+        Route::put('/skrining/{skrining}/tindakan', [\App\Http\Controllers\SkriningController::class, 'updateTindakan'])->name('skrining.tindakan.update');
+        Route::post('/skrining/jadwal', [\App\Http\Controllers\SkriningController::class, 'storeJadwal'])->name('skrining.jadwal.store');
+        Route::post('/skrining/peserta', [\App\Http\Controllers\SkriningController::class, 'storePeserta'])->name('skrining.peserta.store');
 
         // Inventaris UKS
         Route::get('/inventaris', [InventarisUksWebController::class, 'index'])->name('inventaris.index');
@@ -48,8 +50,13 @@ Route::middleware('auth')->group(function () {
     // Student & AI Assistant & Edukasi Routes
     Route::middleware('role:siswa,admin_uks,super_admin,petugas_uks')->group(function () {
         // Skrining Mandiri Siswa
-        Route::get('/skrining-harian', [SkriningWebController::class, 'createSiswa'])->name('skrining.siswa');
-        Route::post('/skrining-harian', [SkriningWebController::class, 'storeSiswa'])->name('skrining.siswa.store');
+        Route::get('/skrining-harian', function () {
+            return view('siswa.skrining');
+        })->name('skrining.siswa');
+        Route::post('/skrining-harian', [\App\Http\Controllers\SkriningController::class, 'storeStudent'])->name('skrining.store');
+
+        // Smart Health Record Siswa
+        Route::get('/health-record', [\App\Http\Controllers\HealthRecordController::class, 'index'])->name('health-record.index');
 
         Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('ai.index');
         Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->name('ai.analyze');

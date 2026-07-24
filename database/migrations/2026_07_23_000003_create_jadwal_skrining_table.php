@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('tanggal_pelaksanaan');
             $table->date('tanggal')->nullable();
             $table->string('lokasi');
-            $table->string('status'); // e.g. scheduled, ongoing, completed, cancelled
+            $table->string('status')->default('Terjadwal'); // e.g. scheduled, ongoing, completed, cancelled, Terjadwal
             $table->text('keterangan')->nullable();
             $table->timestamps();
         });

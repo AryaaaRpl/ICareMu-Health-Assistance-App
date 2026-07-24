@@ -118,6 +118,114 @@
             </div>
         </div>
 
+        <!-- 1.5. Live Triage Monitor (Pemeriksaan Hari Ini) -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Live Triage Monitor - Pemeriksaan Hari Ini</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">Pantau skrining kesehatan masuk secara real-time dan tingkat urgensi AI</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold self-start sm:self-auto">
+                    Total Hari Ini: {{ count($skriningHariIni ?? []) }} Data
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                            <th class="py-3 px-3">Waktu</th>
+                            <th class="py-3 px-3">Nama Siswa</th>
+                            <th class="py-3 px-3">Suhu</th>
+                            <th class="py-3 px-3">Gejala</th>
+                            <th class="py-3 px-3">Status AI</th>
+                            <th class="py-3 px-3 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-medium">
+                        @forelse($skriningHariIni ?? [] as $row)
+                            @php
+                                $namaSiswa = $row->siswa ? ($row->siswa->nama_lengkap ?? $row->siswa->name ?? 'Siswa') : 'Siswa #'.$row->siswa_id;
+                                $kelasSiswa = $row->siswa && isset($row->siswa->kelas) ? ' ('.$row->siswa->kelas.')' : '';
+                                
+                                $gejalaList = is_array($row->gejala) ? implode(', ', $row->gejala) : ($row->gejala ?? 'Tidak ada');
+                                if (empty($gejalaList)) {
+                                    $gejalaList = 'Tidak ada';
+                                }
+                            @endphp
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="py-3.5 px-3 font-semibold text-slate-500 whitespace-nowrap">
+                                    {{ $row->created_at ? $row->created_at->format('H:i') : '-' }} WIB
+                                </td>
+                                <td class="py-3.5 px-3 font-bold text-slate-900">
+                                    {{ $namaSiswa }}<span class="text-slate-400 font-medium">{{ $kelasSiswa }}</span>
+                                </td>
+                                <td class="py-3.5 px-3">
+                                    <span class="font-extrabold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-200">
+                                        {{ number_format((float) $row->suhu_tubuh, 1) }} °C
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-3 max-w-xs text-slate-700 font-semibold truncate" title="{{ $gejalaList }}">
+                                    {{ Str::limit($gejalaList, 35) }}
+                                </td>
+                                <td class="py-3.5 px-3">
+                                    @if($row->ai_status === 'sehat')
+                                        <span class="px-3 py-1.5 rounded-full font-extrabold text-[11px] uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            Sehat
+                                        </span>
+                                    @elseif($row->ai_status === 'pulang')
+                                        <span class="px-3 py-1.5 rounded-full font-extrabold text-[11px] uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                            Pulang
+                                        </span>
+                                    @elseif($row->ai_status === 'observasi_uks')
+                                        <span class="px-3 py-1.5 rounded-full font-extrabold text-[11px] uppercase tracking-wider bg-red-100 text-red-800 border border-red-300 animate-pulse inline-flex items-center gap-1.5 shadow-sm">
+                                            <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+                                            Observasi UKS
+                                        </span>
+                                    @elseif($row->ai_status === 'darurat')
+                                        <span class="px-3 py-1.5 rounded-full font-extrabold text-[11px] uppercase tracking-wider bg-red-100 text-red-800 border border-red-400 animate-pulse inline-flex items-center gap-1.5 shadow-md">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping"></span>
+                                            🚨 Darurat
+                                        </span>
+                                    @else
+                                        <span class="px-3 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                                            Menunggu AI
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="py-3.5 px-3 text-right">
+                                    <a href="{{ route('skrining.show', $row->id) }}" class="px-3.5 py-1.5 bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl shadow transition-all inline-block">
+                                        Lihat Detail
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-10 text-center">
+                                    <div class="max-w-xs mx-auto space-y-2">
+                                        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold text-slate-400">Belum ada data skrining masuk hari ini.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- 2. Middle Section (Charts 2 Columns Grid) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Chart Left: Line Chart Kunjungan 7 Hari -->

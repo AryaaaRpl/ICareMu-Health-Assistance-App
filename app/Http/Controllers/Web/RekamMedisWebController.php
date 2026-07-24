@@ -19,12 +19,30 @@ class RekamMedisWebController extends Controller
      */
     public function index(): View
     {
-        // TenantScope is automatically applied via BelongsToTenant trait if implemented on model,
-        // or query using model default scope
-        $rekam_medis = class_exists(RekamMedis::class) ? RekamMedis::with('siswa')->latest()->get() : collect();
-        $siswas = class_exists(User::class) ? User::all() : collect();
+        $records = \App\Models\SkriningRecord::with('siswa')->latest()->get();
+        $rekam_medis = $records;
 
-        return view('rekam-medis.index', compact('rekam_medis', 'siswas'));
+        $totalSkrining = $records->count();
+        $statusNormal = $records->whereIn('ai_status', ['sehat'])->count();
+        $perluPerhatian = $records->filter(fn($r) => (float)$r->suhu_tubuh > 37.5 || in_array($r->ai_status, ['observasi_uks', 'darurat']))->count();
+        $tindakanDirujuk = $records->whereIn('status_akhir', ['rujuk_rs'])->count();
+
+        $siswaList = User::where('role', 'siswa')->orderBy('name', 'asc')->get();
+        if ($siswaList->isEmpty()) {
+            $siswaList = User::orderBy('name', 'asc')->get();
+        }
+        $siswas = $siswaList;
+
+        return view('rekam-medis.index', compact(
+            'records',
+            'rekam_medis',
+            'totalSkrining',
+            'statusNormal',
+            'perluPerhatian',
+            'tindakanDirujuk',
+            'siswas',
+            'siswaList'
+        ));
     }
 
     /**
@@ -33,38 +51,67 @@ class RekamMedisWebController extends Controller
     public function store(Request $request, IMTCalculatorService $imtService): RedirectResponse
     {
         $validated = $request->validate([
-            'siswa_id' => ['required'],
-            'tinggi_badan' => ['required', 'numeric', 'min:1'],
-            'berat_badan' => ['required', 'numeric', 'min:1'],
-            'suhu' => ['required', 'numeric'],
-            'tekanan_darah' => ['nullable', 'string', 'max:50'],
+            'siswa_id' => ['required', 'exists:users,id'],
+            'suhu' => ['required', 'numeric', 'min:34', 'max:45'],
             'keluhan_utama' => ['required', 'string'],
             'penanganan' => ['nullable', 'string'],
-            'status' => ['required', 'string'],
+            'status' => ['nullable', 'string'],
+            'tinggi_badan' => ['nullable', 'numeric'],
+            'berat_badan' => ['nullable', 'numeric'],
         ]);
 
-        $tinggiBadan = (float) $validated['tinggi_badan'];
-        $beratBadan = (float) $validated['berat_badan'];
+        $statusAkhirMap = [
+            'Istirahat di UKS' => 'istirahat_di_uks',
+            'Diberi Obat' => 'istirahat_di_uks',
+            'Dirujuk ke Rumah Sakit / Puskesmas' => 'rujuk_rs',
+            'Dirujuk' => 'rujuk_rs',
+            'Selesai / Sehat' => 'kembali_ke_kelas',
+            'Selesai' => 'kembali_ke_kelas',
+        ];
 
-        // Inject and use existing IMTCalculatorService
-        $imtData = $imtService->calculate($beratBadan, $tinggiBadan);
+        $statusInput = $validated['status'] ?? 'Selesai / Sehat';
+        $statusAkhir = $statusAkhirMap[$statusInput] ?? 'kembali_ke_kelas';
 
+        // Retrieve student user or fallback sekolah_id
+        $studentUser = User::find($validated['siswa_id']);
+        $sekolahId = $studentUser->sekolah_id ?? auth()->user()->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
+
+        // Also create SkriningRecord to integrate with Triage and Health Record
+        $skrining = \App\Models\SkriningRecord::create([
+            'siswa_id' => $validated['siswa_id'],
+            'sekolah_id' => $sekolahId,
+            'suhu_tubuh' => (float) $validated['suhu'],
+            'gejala' => [$validated['keluhan_utama']],
+            'keluhan_tambahan' => $validated['keluhan_utama'],
+            'ai_status' => (float)$validated['suhu'] >= 38.0 ? 'observasi_uks' : ((float)$validated['suhu'] >= 37.3 ? 'pulang' : 'sehat'),
+            'ai_recommendation' => 'Pemeriksaan fisik oleh Petugas UKS.',
+            'tindakan_uks' => $validated['penanganan'] ?? 'Pemeriksaan standar UKS',
+            'waktu_ditindak' => now(),
+            'status_akhir' => $statusAkhir,
+        ]);
+
+        // Also save to RekamMedis if exists
         if (class_exists(RekamMedis::class)) {
+            $tinggiBadan = (float) ($validated['tinggi_badan'] ?? 165);
+            $beratBadan = (float) ($validated['berat_badan'] ?? 55);
+            $imtData = $imtService->calculate($beratBadan, $tinggiBadan);
+
             RekamMedis::create([
+                'sekolah_id' => $sekolahId,
                 'siswa_id' => $validated['siswa_id'],
                 'tinggi_badan' => $tinggiBadan,
                 'berat_badan' => $beratBadan,
                 'suhu' => (float) $validated['suhu'],
-                'tekanan_darah' => $validated['tekanan_darah'] ?? null,
+                'tekanan_darah' => $request->input('tekanan_darah', '120/80'),
                 'keluhan_utama' => $validated['keluhan_utama'],
                 'penanganan' => $validated['penanganan'] ?? null,
-                'status' => $validated['status'],
+                'status' => $statusInput,
                 'imt_score' => $imtData['imt_score'],
                 'status_risiko' => $imtData['status_risiko'],
                 'tanggal' => now()->toDateString(),
             ]);
         }
 
-        return redirect()->back()->with('success', 'Data Rekam Medis berhasil disimpan.');
+        return redirect()->back()->with('success', 'Data rekam medis & skrining berhasil disimpan.');
     }
 }

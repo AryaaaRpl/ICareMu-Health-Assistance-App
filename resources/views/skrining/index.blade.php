@@ -1,48 +1,8 @@
 <x-app-layout>
     @php
-        // Fallback dummy data if not provided by controller
-        $jadwals = $jadwals ?? $jadwal_skrining ?? [
-            (object)[
-                'id' => 1,
-                'jenis_skrining' => 'Pemeriksaan Mata & THT',
-                'tanggal_pelaksanaan' => '2026-07-20',
-                'lokasi' => 'Ruang UKS Utama',
-                'status' => 'PENDING',
-                'status_color' => 'bg-amber-50 text-amber-600 border-amber-200',
-            ],
-            (object)[
-                'id' => 2,
-                'jenis_skrining' => 'Deteksi Anemia (Putri)',
-                'tanggal_pelaksanaan' => '2026-07-15',
-                'lokasi' => 'Aula Sekolah',
-                'status' => 'BERJALAN',
-                'status_color' => 'bg-blue-50 text-blue-600 border-blue-200',
-            ],
-            (object)[
-                'id' => 3,
-                'jenis_skrining' => 'Skrining Status Gizi (IMT)',
-                'tanggal_pelaksanaan' => '2026-07-05',
-                'lokasi' => 'Ruang UKS 2',
-                'status' => 'SELESAI',
-                'status_color' => 'bg-emerald-50 text-emerald-600 border-emerald-200',
-            ],
-            (object)[
-                'id' => 4,
-                'jenis_skrining' => 'Kesehatan Gigi & Mulut',
-                'tanggal_pelaksanaan' => '2026-08-10',
-                'lokasi' => 'Klinik Gigi Sekolah',
-                'status' => 'PENDING',
-                'status_color' => 'bg-amber-50 text-amber-600 border-amber-200',
-            ],
-        ];
-
-        $siswas = $siswas ?? [
-            (object)['id' => 101, 'nama' => 'Ahmad Faiz Al-Fatih (X MIPA 1)'],
-            (object)['id' => 102, 'nama' => 'Siti Aminah Az-Zahra (XII IPS 2)'],
-            (object)['id' => 103, 'nama' => 'Budi Santoso Prabowo (XI MIPA 3)'],
-            (object)['id' => 104, 'nama' => 'Nurul Huda Rahmawati (X MIPA 2)'],
-            (object)['id' => 105, 'nama' => 'Rizqi Pratama Wijaya (XI MIPA 1)'],
-        ];
+        $jadwalSkrining = $jadwalSkrining ?? $jadwals ?? $jadwal_skrining ?? collect();
+        $jadwals = $jadwalSkrining;
+        $siswas = $siswas ?? collect();
     @endphp
 
     <div class="space-y-8">
@@ -72,7 +32,7 @@
                     </div>
                     <div>
                         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">JADWAL BULAN INI</div>
-                        <div class="text-sm font-extrabold text-slate-900">{{ count($jadwals) }} Kegiatan</div>
+                        <div class="text-sm font-extrabold text-slate-900">{{ count($jadwalSkrining) }} Kegiatan</div>
                     </div>
                 </div>
             </div>
@@ -109,6 +69,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Validation Error Catcher -->
+                    @if ($errors->any())
+                        <div class="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs font-semibold">
+                            <ul class="list-disc pl-4 space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
                     <!-- Native Form targeting route('skrining.jadwal.store') -->
                     <form action="{{ route('skrining.jadwal.store') }}" method="POST" class="space-y-4">
@@ -161,7 +132,7 @@
                             <p class="text-xs text-slate-500">Jadwal pemeriksaan kesehatan mendatang & histori.</p>
                         </div>
                         <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[11px] font-bold">
-                            {{ count($jadwals) }} Jadwal
+                            {{ count($jadwalSkrining) }} Jadwal
                         </span>
                     </div>
 
@@ -176,7 +147,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs">
-                                @foreach($jadwals as $j)
+                                @forelse($jadwalSkrining as $j)
                                     <tr class="hover:bg-slate-50/60 transition duration-150">
                                         <td class="py-3 px-4 font-bold text-slate-900">
                                             {{ $j->jenis_skrining ?? $j->nama_kegiatan }}
@@ -188,15 +159,21 @@
                                             {{ is_string($tgl) ? \Carbon\Carbon::parse($tgl)->format('d M Y') : $tgl->format('d M Y') }}
                                         </td>
                                         <td class="py-3 px-4 text-slate-600">
-                                            {{ $j->lokasi }}
+                                            {{ $j->lokasi_kegiatan ?? $j->lokasi }}
                                         </td>
                                         <td class="py-3 px-4 text-right whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border {{ $j->status_color ?? 'bg-slate-100 text-slate-600 border-slate-200' }}">
-                                                {{ $j->status ?? 'AKTIF' }}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border {{ $j->status_color ?? 'bg-emerald-50 text-emerald-600 border-emerald-200' }}">
+                                                {{ $j->status ?? 'Aktif' }}
                                             </span>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-xs text-slate-400 font-medium">
+                                            Belum ada jadwal skrining.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -248,7 +225,7 @@
                             <select name="siswa_id" id="siswa_id" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150">
                                 <option value="" disabled selected>-- Pilih Siswa --</option>
                                 @foreach($siswas as $siswa)
-                                    <option value="{{ $siswa->id }}">{{ $siswa->nama }}</option>
+                                    <option value="{{ $siswa->id }}">{{ $siswa->name ?? $siswa->nama_lengkap ?? $siswa->nama ?? 'Siswa #'.$siswa->id }}</option>
                                 @endforeach
                             </select>
                         </div>

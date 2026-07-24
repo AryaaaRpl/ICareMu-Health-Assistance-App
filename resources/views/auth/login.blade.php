@@ -59,10 +59,10 @@
                 <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
-                    <!-- NIS / NIP / Identifier Input -->
+                    <!-- NISN / NIP / Identifier Input -->
                     <div>
                         <label for="identifier" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                            NIS / NIP / Identifier
+                            NISN / NIP / Identifier
                         </label>
                         <div class="relative rounded-xl shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -76,7 +76,7 @@
                                    value="{{ old('identifier') }}" 
                                    required 
                                    autofocus 
-                                   placeholder="Masukkan NIS atau NIP anda" 
+                                   placeholder="Masukkan NISN atau NIP anda" 
                                    class="block w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white text-sm transition-all duration-200 @error('identifier') border-red-300 bg-red-50/30 focus:ring-red-500 @enderror">
                         </div>
                         @error('identifier')

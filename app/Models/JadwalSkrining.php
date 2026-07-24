@@ -27,6 +27,22 @@ class JadwalSkrining extends Model
     ];
 
     /**
+     * Accessor for lokasi_kegiatan alias.
+     */
+    public function getLokasiKegiatanAttribute(): ?string
+    {
+        return $this->attributes['lokasi'] ?? null;
+    }
+
+    /**
+     * Mutator for lokasi_kegiatan alias.
+     */
+    public function setLokasiKegiatanAttribute($value): void
+    {
+        $this->attributes['lokasi'] = $value;
+    }
+
+    /**
      * Get all participants for this screening schedule.
      */
     public function peserta(): HasMany

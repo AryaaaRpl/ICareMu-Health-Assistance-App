@@ -16,7 +16,7 @@
                     </p>
                 </div>
                 <div>
-                    <a href="{{ route('skrining.index') }}"
+                    <a href="{{ route('skrining.siswa') }}"
                        class="px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-600 font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 group">
                         <span>Mulai Skrining</span>
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@
         <!-- 2. Navigation Grid (Body-8.jpg matching layout) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <!-- Item 1: Smart Health Record -->
-            <a href="{{ route('rekam-medis.index') }}"
+            <a href="{{ route('health-record.index') }}"
                class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-105 transition-transform">

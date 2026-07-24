@@ -20,11 +20,14 @@ class SkriningWebController extends Controller
      */
     public function index(): View
     {
-        $jadwal_skrining = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->get() : collect();
-        $jadwals = $jadwal_skrining;
+        $jadwalSkrining = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->get() : collect();
+        if ($jadwalSkrining->isEmpty() && class_exists(JadwalSkrining::class)) {
+            $jadwalSkrining = JadwalSkrining::withoutGlobalScopes()->latest()->get();
+        }
+        $jadwals = $jadwalSkrining;
         $siswas = class_exists(User::class) ? User::all() : collect();
 
-        return view('skrining.index', compact('jadwal_skrining', 'jadwals', 'siswas'));
+        return view('skrining.index', compact('jadwalSkrining', 'jadwals', 'siswas'));
     }
 
     /**
@@ -83,21 +86,29 @@ class SkriningWebController extends Controller
     public function storeJadwal(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jenis_skrining' => ['nullable', 'string', 'max:255'],
-            'nama_kegiatan' => ['nullable', 'string', 'max:255'],
+            'jenis_skrining' => ['required', 'string', 'max:255'],
             'tanggal_pelaksanaan' => ['nullable', 'date'],
             'tanggal' => ['nullable', 'date'],
             'lokasi' => ['nullable', 'string', 'max:255'],
+            'lokasi_kegiatan' => ['nullable', 'string', 'max:255'],
+            'nama_kegiatan' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'max:50'],
             'keterangan' => ['nullable', 'string'],
         ]);
 
-        // Map inputs for compatibility
+        $sekolahId = auth()->user()->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
+        $tanggal = $validated['tanggal_pelaksanaan'] ?? $validated['tanggal'] ?? now()->toDateString();
+        $lokasi = $validated['lokasi'] ?? $validated['lokasi_kegiatan'] ?? 'Ruang UKS Utama';
+        $jenis = $validated['jenis_skrining'] ?? $validated['nama_kegiatan'] ?? 'Skrining Umum';
+
         $payload = [
-            'jenis_skrining' => $validated['jenis_skrining'] ?? $validated['nama_kegiatan'] ?? 'Skrining Umum',
-            'nama_kegiatan' => $validated['nama_kegiatan'] ?? $validated['jenis_skrining'] ?? 'Skrining Umum',
-            'tanggal_pelaksanaan' => $validated['tanggal_pelaksanaan'] ?? $validated['tanggal'] ?? now()->toDateString(),
-            'tanggal' => $validated['tanggal'] ?? $validated['tanggal_pelaksanaan'] ?? now()->toDateString(),
-            'lokasi' => $validated['lokasi'] ?? 'Ruang UKS',
+            'sekolah_id' => $sekolahId,
+            'jenis_skrining' => $jenis,
+            'nama_kegiatan' => $validated['nama_kegiatan'] ?? $jenis,
+            'tanggal_pelaksanaan' => $tanggal,
+            'tanggal' => $tanggal,
+            'lokasi' => $lokasi,
+            'status' => $validated['status'] ?? 'Terjadwal',
             'keterangan' => $validated['keterangan'] ?? null,
         ];
 
@@ -122,8 +133,13 @@ class SkriningWebController extends Controller
             'catatan' => ['nullable', 'string'],
         ]);
 
+        $jadwalId = (int) ($validated['jadwal_id'] ?? $validated['jadwal_skrining_id'] ?? 1);
+        $sekolahId = auth()->user()->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
+
         $payload = [
-            'jadwal_skrining_id' => $validated['jadwal_id'] ?? $validated['jadwal_skrining_id'] ?? 1,
+            'sekolah_id' => $sekolahId,
+            'jadwal_id' => $jadwalId,
+            'jadwal_skrining_id' => $jadwalId,
             'siswa_id' => $validated['siswa_id'],
             'status_kehadiran' => $validated['status_kehadiran'] ?? 'Hadir',
             'catatan_hasil' => $validated['catatan_hasil'] ?? $validated['catatan'] ?? null,
