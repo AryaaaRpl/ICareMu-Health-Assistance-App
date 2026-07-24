@@ -1,9 +1,8 @@
 <x-guest-layout>
-    <div class="min-h-screen bg-slate-50 flex flex-col justify-center items-center pt-6 sm:pt-0 pb-12">
+    <div class="min-h-screen flex flex-col justify-center items-center pt-6 sm:pt-0 pb-12">
         
         <!-- Main Card Wrapper -->
         <div 
-            class="w-full sm:max-w-md mt-6 px-6 py-8 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:rounded-3xl" 
             x-data="{ step: 1 }"
             x-cloak
         >

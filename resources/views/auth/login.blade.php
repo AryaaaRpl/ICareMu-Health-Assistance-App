@@ -24,24 +24,8 @@
 
         <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
             <!-- Brand Logo & Header -->
-            <div class="text-center">
-                <div class="inline-flex items-center justify-center gap-2 mb-3">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-teal-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 0v4m0-4h4m-4 0H8" class="text-teal-200"></path>
-                        </svg>
-                    </div>
-                    <span class="text-3xl font-extrabold tracking-tight">
-                        <span class="text-blue-600">iCare</span><span class="text-teal-500">Mu</span>
-                    </span>
-                </div>
-                <h2 class="text-2xl font-bold tracking-tight text-slate-900">
-                    Masuk ke Akun Anda
-                </h2>
-                <p class="mt-1.5 text-sm text-slate-500">
-                    Analytics & Monitoring Center UKS Muhammadiyah
-                </p>
+            <div class="flex justify-center items-center">
+                <img src="{{ asset('Logo.png') }}" alt="Logo" class="h-20 sm:h-24 w-auto max-w-full object-contain mx-auto drop-shadow-sm" />
             </div>
 
             <!-- Session Status Alert -->
