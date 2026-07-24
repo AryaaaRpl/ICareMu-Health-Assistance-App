@@ -10,26 +10,31 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
+        Schema::dropIfExists('artikel_ismubas');
+
         Schema::create('artikel_ismubas', static function (Blueprint $table): void {
             $table->id();
-            $table->string('title');
+            $table->foreignId('sekolah_id')->constrained('sekolahs')->cascadeOnDelete();
+            $table->string('judul');
             $table->string('slug')->unique();
-            $table->longText('content');
-            $table->enum('kategori', ['Thibbun Nabawi', 'Adab Kebersihan', 'Fiqih Sakit']);
-            $table->string('image_url')->nullable();
+            $table->enum('kategori', [
+                'edukasi_kesehatan',
+                'fikih_wanita',
+                'kesehatan_mental',
+                'artikel_islami',
+            ]);
+            $table->longText('konten');
+            $table->string('thumbnail')->nullable();
+            $table->enum('status', ['draft', 'published'])->default('published');
             $table->timestamps();
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {

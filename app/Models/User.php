@@ -28,6 +28,7 @@ class User extends Authenticatable
         'jenis_kelamin',
         'payment_status',
         'payment_order_id',
+        'no_wa',
         'nisn',
         'nama_wali',
         'no_wa_wali',

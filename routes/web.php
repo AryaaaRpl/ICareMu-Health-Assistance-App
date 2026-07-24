@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::middleware('auth')->group(function () {
     // Shared Student & Dashboard Route
+    Route::get('/activation', [\App\Http\Controllers\PaymentController::class, 'activation'])->name('payment.activation');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -62,8 +63,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->name('ai.analyze');
         Route::post('/ai/chat', [AiAssistantController::class, 'chat'])->name('ai.chat');
 
-        Route::get('/ismuba', [EdukasiIsmubaController::class, 'index'])->name('ismuba.index');
-        Route::get('/ismuba/{article:slug}', [EdukasiIsmubaController::class, 'show'])->name('ismuba.show');
+        Route::get('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'index'])->name('ismuba.index');
+        Route::post('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'store'])->name('ismuba.store');
+        Route::put('/ismuba/{article}', [\App\Http\Controllers\IsmubaController::class, 'update'])->name('ismuba.update');
+        Route::delete('/ismuba/{article}', [\App\Http\Controllers\IsmubaController::class, 'destroy'])->name('ismuba.destroy');
+        Route::get('/ismuba/{article:slug}', [\App\Http\Controllers\IsmubaController::class, 'show'])->name('ismuba.show');
     });
 
     // Strict Female Students Only Routes (Menstrual Health)

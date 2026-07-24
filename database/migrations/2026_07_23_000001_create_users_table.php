@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['super_admin', 'admin_uks', 'petugas_uks', 'admin_super', 'siswa'])->default('siswa');
+            $table->enum('role', ['super_admin', 'admin_uks', 'petugas_uks', 'admin_super', 'siswa', 'guru_ismuba'])->default('siswa');
             $table->enum('jenis_kelamin', ['L', 'P'])->default('P');
             $table->enum('payment_status', ['paid', 'unpaid'])->default('unpaid');
             $table->string('payment_order_id')->nullable();

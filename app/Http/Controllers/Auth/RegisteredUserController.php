@@ -20,11 +20,13 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $sekolahs = \App\Models\Sekolah::select('id', 'nama_sekolah')->orderBy('nama_sekolah')->get();
+
+        return view('auth.register', compact('sekolahs'));
     }
 
     /**
-     * Handle an incoming registration request (3-step wizard).
+     * Handle an incoming registration request.
      *
      * @throws ValidationException
      */
@@ -32,24 +34,28 @@ class RegisteredUserController extends Controller
     {
         $validated = $request->validate([
             // Step 1: Standard account credentials
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'nama_lengkap' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', Rules\Password::defaults()],
 
             // Step 2 & 3: Additional student & tenant wizard fields
-            'sekolah_id' => ['nullable', 'integer'],
+            'sekolah_id' => ['required', 'exists:sekolahs,id'],
             'nisn' => ['nullable', 'string', 'max:20'],
             'nama_wali' => ['nullable', 'string', 'max:255'],
             'no_wa_wali' => ['nullable', 'string', 'max:20'],
             'tinggi_badan' => ['nullable', 'numeric'],
             'berat_badan' => ['nullable', 'numeric'],
-            'golongan_darah' => ['nullable', 'string', 'max:5'],
+            'golongan_darah' => ['nullable', 'string', 'max:20'],
         ]);
 
+        $name = $validated['nama_lengkap'] ?? $validated['name'] ?? 'Siswa';
+
         $userData = [
-            'name' => $validated['name'],
+            'name' => $name,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'sekolah_id' => $request->sekolah_id,
         ];
 
         // Map wizard fields to user model payload if present
@@ -66,6 +72,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard.uks'));
+        return redirect()->route('payment.activation');
     }
 }

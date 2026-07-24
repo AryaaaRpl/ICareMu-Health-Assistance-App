@@ -18,14 +18,17 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        $sekolah = \App\Models\Sekolah::factory()->create();
+
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'sekolah_id' => $sekolah->id,
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('payment.activation', absolute: false));
     }
 }

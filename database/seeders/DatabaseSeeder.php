@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         // 1. Create 1 Main Tenant (sekolah_id)
         $sekolah = Sekolah::firstOrCreate(
             ['npsn' => '20109988'],
-            ['nama_sekolah' => 'SMP Negeri 1 Jakarta']
+            ['nama_sekolah' => 'SMKS Muhammadiyah 1 Genteng']
         );
 
         // 2. Create Admin UKS user for login
@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
                 'role' => 'admin_uks',
                 'jenis_kelamin' => 'P',
                 'payment_status' => 'paid',
+                'no_wa' => '081234567890',
             ]
         );
 
@@ -57,10 +58,38 @@ class DatabaseSeeder extends Seeder
                 'role' => 'super_admin',
                 'jenis_kelamin' => 'L',
                 'payment_status' => 'paid',
+                'no_wa' => '081234567891',
             ]
         );
 
-        // 3. Create 20 Dummy Students (Siswa) - 10 Male ('L') and 10 Female ('P')
+        // 2b. Create Guru ISMUBA / Asatidz users for Halo Asatidz
+        User::updateOrCreate(
+            ['email' => 'ustadz.ahmad@icaremu.sch.id'],
+            [
+                'sekolah_id' => $sekolah->id,
+                'name' => 'Ustadz Ahmad Dahlan, S.Pd.I',
+                'password' => Hash::make('password'),
+                'role' => 'guru_ismuba',
+                'jenis_kelamin' => 'L',
+                'payment_status' => 'paid',
+                'no_wa' => '081298765432',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'ustadzah.fatimah@icaremu.sch.id'],
+            [
+                'sekolah_id' => $sekolah->id,
+                'name' => 'Ustadzah Fatimah, M.Ag',
+                'password' => Hash::make('password'),
+                'role' => 'guru_ismuba',
+                'jenis_kelamin' => 'P',
+                'payment_status' => 'paid',
+                'no_wa' => '081387654321',
+            ]
+        );
+
+        // 3. Create 20 Dummy Students (Siswa)
         $students = collect();
         for ($i = 1; $i <= 20; $i++) {
             $isFemale = $i % 2 === 0;
@@ -77,9 +106,9 @@ class DatabaseSeeder extends Seeder
                 'nisn' => $nisn,
                 'nama_wali' => $faker->name(),
                 'no_wa_wali' => '08' . $faker->numberBetween(100000000, 999999999),
+                'no_wa' => '08' . $faker->numberBetween(100000000, 999999999),
             ]);
 
-            // Sync with Siswa table if exists
             if (Schema::hasTable('siswa')) {
                 Siswa::create([
                     'user_id' => $user->id,
@@ -96,7 +125,7 @@ class DatabaseSeeder extends Seeder
             $students->push($user);
         }
 
-        // 4. Attach 30 Rekam Medis records randomly to those students
+        // 4. Attach 30 Rekam Medis records randomly
         for ($i = 0; $i < 30; $i++) {
             $student = $students->random();
             $siswaRecord = Schema::hasTable('siswa') ? Siswa::where('user_id', $student->id)->first() : null;
@@ -108,14 +137,14 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 5. Create 3 Jadwal Skrining, and attach random students as PesertaSkrining
+        // 5. Create 3 Jadwal Skrining
         $screeningTypes = [
             [
                 'jenis' => 'Umum',
                 'nama' => 'Skrining Kesehatan Umum Berkala',
                 'tanggal' => now()->subDays(14)->format('Y-m-d'),
                 'status' => 'completed',
-                'lokasi' => 'Aula SMP Negeri 1 Jakarta',
+                'lokasi' => 'Aula SMKS Muhammadiyah 1 Genteng',
             ],
             [
                 'jenis' => 'Gigi',
@@ -129,7 +158,7 @@ class DatabaseSeeder extends Seeder
                 'nama' => 'Skrining Indera Penglihatan (Mata)',
                 'tanggal' => now()->addDays(15)->format('Y-m-d'),
                 'status' => 'scheduled',
-                'lokasi' => 'Ruang Kelas 8A',
+                'lokasi' => 'Masjid An-Namiroh',
             ],
         ];
 
@@ -144,7 +173,6 @@ class DatabaseSeeder extends Seeder
                 'lokasi' => $screening['lokasi'],
             ]);
 
-            // Attach random subset of students (10-15 students per screening)
             $participatingStudents = $students->random(rand(10, 15));
             foreach ($participatingStudents as $studentUser) {
                 $siswaRecord = Schema::hasTable('siswa') ? Siswa::where('user_id', $studentUser->id)->first() : null;
@@ -190,42 +218,47 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 7. Seed 5 Artikel ISMUBA (Kesehatan Islami)
+        // 7. Seed 5 Artikel ISMUBA (Updated Schema)
         $artikelIsmubaData = [
             [
-                'title' => 'Adab Menjenguk Orang Sakit dalam Islam',
+                'judul' => 'Adab Menjenguk Orang Sakit dalam Islam',
                 'slug' => 'adab-menjenguk-orang-sakit-dalam-islam',
-                'kategori' => 'Adab Kebersihan',
-                'content' => "Menjenguk saudara muslim yang sedang sakit merupakan salah satu kewajiban dan amalan yang sangat mulia dalam Islam.\n\nDalam sebuah hadits, Rasulullah SAW bersabda: 'Hak seorang muslim atas muslim lainnya ada lima: menjawab salam, menjenguk orang sakit, mengantar jenazah, memenuhi undangan, dan mendoakan yang bersin.' (HR. Bukhari dan Muslim).\n\nBeberapa Adab Utama Menjenguk Orang Sakit:\n1. Mendoakan Kesembuhan: Membaca doa kesembuhan 'Laa ba'-sa thahuurun in syaa-allah' atau 'As-alullahal 'azhiim rabbal 'arsyil 'azhiim an yasyfiyak'.\n2. Memberikan Motivasi & Ketenangan: Ucapkan kata-kata yang membesarkan hati dan menenangkan pikiran pasien.\n3. Menjaga Waktu Kunjungan: Jangan terlalu lama berkunjung agar si sakit dapat beristirahat cukup.\n4. Menjaga Kebersihan UKS: Cuci tangan sebelum dan sesudah berkunjung demi kesehatan bersama.",
-                'image_url' => 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=600&auto=format&fit=crop&q=80',
+                'kategori' => 'artikel_islami',
+                'konten' => "Menjenguk saudara muslim yang sedang sakit merupakan salah satu kewajiban dan amalan yang sangat mulia dalam Islam.\n\nDalam sebuah hadits, Rasulullah SAW bersabda: 'Hak seorang muslim atas muslim lainnya ada lima: menjawab salam, menjenguk orang sakit, mengantar jenazah, memenuhi undangan, dan mendoakan yang bersin.' (HR. Bukhari dan Muslim).\n\nBeberapa Adab Utama Menjenguk Orang Sakit:\n1. Mendoakan Kesembuhan: Membaca doa kesembuhan 'Laa ba'-sa thahuurun in syaa-allah' atau 'As-alullahal 'azhiim rabbal 'arsyil 'azhiim an yasyfiyak'.\n2. Memberikan Motivasi & Ketenangan: Ucapkan kata-kata yang membesarkan hati dan menenangkan pikiran pasien.\n3. Menjaga Waktu Kunjungan: Jangan terlalu lama berkunjung agar si sakit dapat beristirahat cukup.\n4. Menjaga Kebersihan UKS: Cuci tangan sebelum dan sesudah berkunjung demi kesehatan bersama.",
+                'thumbnail' => 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=600&auto=format&fit=crop&q=80',
+                'status' => 'published',
             ],
             [
-                'title' => 'Manfaat Habbatussauda dan Madu menurut Thibbun Nabawi',
+                'judul' => 'Manfaat Habbatussauda dan Madu menurut Thibbun Nabawi',
                 'slug' => 'manfaat-habbatussauda-dan-madu-menurut-thibbun-nabawi',
-                'kategori' => 'Thibbun Nabawi',
-                'content' => "Thibbun Nabawi mengutamakan pengobatan alami yang sesuai dengan tuntunan Rasulullah SAW untuk menjaga kekebalan tubuh siswa.\n\n1. Habbatussauda (Jintan Hitam)\nRasulullah SAW bersabda: 'Sesungguhnya pada jintan hitam terdapat penyembuh bagi segala penyakit, kecuali kematian.' (HR. Bukhari). Habbatussauda kaya akan thymoquinone yang terbukti meningkatkan imunitas tubuh dan melawan peradangan.\n\n2. Madu Alami\nAllah SWT berfirman dalam Surah An-Nahl ayat 69: 'Dari perut lebah itu keluar minuman (madu) yang bermacam-macam warnanya, di dalamnya terdapat obat yang menyembuhkan bagi manusia.' Madu bekerja sebagai antiseptik alami, meredakan batuk, dan memberikan energi instan bagi siswa di UKS.",
-                'image_url' => 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?w=600&auto=format&fit=crop&q=80',
+                'kategori' => 'edukasi_kesehatan',
+                'konten' => "Thibbun Nabawi mengutamakan pengobatan alami yang sesuai dengan tuntunan Rasulullah SAW untuk menjaga kekebalan tubuh siswa.\n\n1. Habbatussauda (Jintan Hitam)\nRasulullah SAW bersabda: 'Sesungguhnya pada jintan hitam terdapat penyembuh bagi segala penyakit, kecuali kematian.' (HR. Bukhari). Habbatussauda kaya akan thymoquinone yang terbukti meningkatkan imunitas tubuh dan melawan peradangan.\n\n2. Madu Alami\nAllah SWT berfirman dalam Surah An-Nahl ayat 69: 'Dari perut lebah itu keluar minuman (madu) yang bermacam-macam warnanya, di dalamnya terdapat obat yang menyembuhkan bagi manusia.' Madu bekerja sebagai antiseptik alami, meredakan batuk, dan memberikan energi instan bagi siswa di UKS.",
+                'thumbnail' => 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?w=600&auto=format&fit=crop&q=80',
+                'status' => 'published',
             ],
             [
-                'title' => 'Kebersihan Adalah Sebagian dari Iman (Thaharah di UKS)',
-                'slug' => 'kebersihan-adalah-sebagian-dari-iman-thaharah-di-uks',
-                'kategori' => 'Adab Kebersihan',
-                'content' => "Islam adalah agama yang sangat mengagungkan kebersihan. Rasulullah SAW bersabda: 'Thaharah (kebersihan) itu adalah separuh dari iman.' (HR. Muslim).\n\nPenerapan Thaharah & Kebersihan di Lingkungan UKS Sekolah:\n- Menjaga Sanitasi Ruang UKS: Memastikan peralatan medis steril, tempat tidur rapi, dan lantai selalu bersih.\n- Cuci Tangan 6 Langkah: Membiasakan mencuci tangan pakai sabun dan air mengalir sebelum & sesudah menangani pasien.\n- Menjaga Kebersihan Diri (Hygiene): Memotong kuku, memakai pakaian bersih, dan menjaga wudhu agar selalu segar dan sehat.",
-                'image_url' => 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=600&auto=format&fit=crop&q=80',
+                'judul' => 'Panduan Fikih Wanita: Thaharah dan Kebersihan Diri Saat Haid',
+                'slug' => 'panduan-fikih-wanita-thaharah-dan-kebersihan-diri-saat-haid',
+                'kategori' => 'fikih_wanita',
+                'konten' => "Islam memberikan perhatian khusus pada kesehatan reproduksi dan kesucian wanita.\n\nDalam fiqih wanita, masa haid membutuhkan perhatian terhadap kebersihan diri (personal hygiene) dan tata cara mandi wajib (mandi janabah) setelah suci.\n\nBeberapa poin penting:\n1. Memperhatikan siklus dan menjaga kebersihan organ kewanitaan.\n2. Tata cara mandi wajib sesuai sunnah Rasulullah SAW.\n3. Istirahat yang cukup dan asupan nutrisi penambah darah.",
+                'thumbnail' => 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=600&auto=format&fit=crop&q=80',
+                'status' => 'published',
             ],
             [
-                'title' => 'Panduan Fiqih Bersuci dan Shalat bagi Siswa Sakit',
-                'slug' => 'panduan-fiqih-bersuci-dan-shalat-bagi-siswa-sakit',
-                'kategori' => 'Fiqih Sakit',
-                'content' => "Sakit bukanlah penghalang bagi seorang muslim untuk menjalankan ibadah shalat 5 waktu. Allah SWT memberikan kemudahan (rukhshah) bagi hamba-Nya yang sedang uzur atau sakit.\n\n1. Tata Cara Bersuci (Tayamum)\nJika siswa tidak mampu terkena air atau dalam kondisi infus/perban, berwudhu dapat digantikan dengan Tayamum menggunakan debu yang suci.\n\n2. Cara Shalat Saat Sakit\n- Shalat Duduk: Jika tidak sanggup berdiri.\n- Shalat Berbaring: Jika tidak sanggup duduk, posisi berbaring miring menghadap kiblat atau terlentang dengan isyarat.\n\nPrinsip Fiqih: 'Agama itu mudah, dan Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya.'",
-                'image_url' => 'https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&auto=format&fit=crop&q=80',
+                'judul' => 'Menjaga Kesehatan Mental Menurut Kacamata Islam dan Al-Qur\'an',
+                'slug' => 'menjaga-kesehatan-mental-menurut-kacamata-islam',
+                'kategori' => 'kesehatan_mental',
+                'konten' => "Kesehatan mental sama pentingnya dengan kesehatan fisik. Dalam Islam, ketenangan jiwa dapat dicapai melalui dzikrullah (mengingat Allah) dan ikhlas dalam menghadapi ujian.\n\nAllah SWT berfirman: 'Ingatlah, hanya dengan mengingat Allah hati menjadi tenteram.' (QS. Ar-Ra'd: 28).\n\nTips menjaga kesehatan mental:\n1. Senantiasa berdzikir dan berdo'a saat mengalami kecemasan.\n2. Berbagi cerita dengan konsultan/guru ISMUBA di sekolah melalui layanan Halo Asatidz.\n3. Istirahat teratur dan menjaga wudhu.",
+                'thumbnail' => 'https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&auto=format&fit=crop&q=80',
+                'status' => 'published',
             ],
             [
-                'title' => 'Manfaat Bekam (Cupping) dan Anjuran Menjaga Kesehatan menurut Rasulullah SAW',
+                'judul' => 'Manfaat Bekam (Cupping) dan Anjuran Menjaga Kesehatan menurut Rasulullah SAW',
                 'slug' => 'manfaat-bekam-dan-anjuran-menjaga-kesehatan',
-                'kategori' => 'Thibbun Nabawi',
-                'content' => "Menjaga kesehatan tubuh adalah bentuk rasa syukur atas amanah nikmat sehat dari Allah SWT.\n\nSalah satu metode Thibbun Nabawi yang direkomendasikan adalah Bekam (Hijamah). Rasulullah SAW bersabda: 'Sebaik-baik pengobatan yang kalian lakukan adalah bekam.' (HR. Bukhari).\n\nManfaat Bekam & Pola Hidup Sehat Rasulullah:\n1. Membuang Toksin / Darah Kotor: Membantu melancarkan sirkulasi darah dan meredakan ketegangan otot.\n2. Pola Makan Seimbang: Berhenti makan sebelum kenyang dan menghindari konsumsi makanan berlebihan.\n3. Olahraga Sunnah: Membiasakan jalan kaki, berkuda, memanah, atau berenang untuk melatih fisik siswa.",
-                'image_url' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
+                'kategori' => 'edukasi_kesehatan',
+                'konten' => "Menjaga kesehatan tubuh adalah bentuk rasa syukur atas amanah nikmat sehat dari Allah SWT.\n\nSalah satu metode Thibbun Nabawi yang direkomendasikan adalah Bekam (Hijamah). Rasulullah SAW bersabda: 'Sebaik-baik pengobatan yang kalian lakukan adalah bekam.' (HR. Bukhari).\n\nManfaat Bekam & Pola Hidup Sehat Rasulullah:\n1. Membuang Toksin / Darah Kotor: Membantu melancarkan sirkulasi darah dan meredakan ketegangan otot.\n2. Pola Makan Seimbang: Berhenti makan sebelum kenyang dan menghindari konsumsi makanan berlebihan.\n3. Olahraga Sunnah: Membiasakan jalan kaki, berkuda, memanah, atau berenang untuk melatih fisik siswa.",
+                'thumbnail' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&auto=format&fit=crop&q=80',
+                'status' => 'published',
             ],
         ];
 
@@ -233,20 +266,21 @@ class DatabaseSeeder extends Seeder
             ArtikelIsmuba::updateOrCreate(
                 ['slug' => $art['slug']],
                 [
-                    'title' => $art['title'],
+                    'sekolah_id' => $sekolah->id,
+                    'judul' => $art['judul'],
                     'kategori' => $art['kategori'],
-                    'content' => $art['content'],
-                    'image_url' => $art['image_url'],
+                    'konten' => $art['konten'],
+                    'thumbnail' => $art['thumbnail'],
+                    'status' => $art['status'],
                 ]
             );
         }
 
-        // 8. Seed Menstrual Records for Female Students (AI Amenorrhea Trigger)
+        // 8. Seed Menstrual Records for Female Students
         $femaleStudents = User::where('role', 'siswa')->where('jenis_kelamin', 'P')->get();
 
         foreach ($femaleStudents as $index => $femaleStudent) {
             if ($index === 0) {
-                // First female student (siswa2@icaremu.sch.id): Last period 4 months ago (>90 days -> triggers AI Amenorrhea Warning!)
                 MenstrualRecord::create([
                     'siswa_id' => $femaleStudent->id,
                     'tanggal_mulai' => now()->subMonths(4)->format('Y-m-d'),
@@ -255,7 +289,6 @@ class DatabaseSeeder extends Seeder
                     'catatan' => 'Siklus terhenti lama, kram perut ringan 4 bulan lalu.',
                 ]);
             } else {
-                // Other female students: Normal period 20 days ago
                 MenstrualRecord::create([
                     'siswa_id' => $femaleStudent->id,
                     'tanggal_mulai' => now()->subDays(20)->format('Y-m-d'),

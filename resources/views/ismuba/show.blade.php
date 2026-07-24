@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-8 max-w-4xl mx-auto">
+    <div class="space-y-8 max-w-4xl mx-auto pb-12">
         <!-- Back Navigation Button -->
         <div>
             <a href="{{ route('ismuba.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 shadow-sm transition-all">
@@ -16,20 +16,29 @@
             <div class="space-y-4 border-b border-slate-100 pb-6">
                 @php
                     $badgeStyle = match($article->kategori) {
-                        'Thibbun Nabawi' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                        'Adab Kebersihan' => 'bg-blue-50 text-blue-700 border-blue-200',
-                        'Fiqih Sakit' => 'bg-amber-50 text-amber-700 border-amber-200',
+                        'edukasi_kesehatan' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                        'fikih_wanita' => 'bg-pink-50 text-pink-700 border-pink-200',
+                        'kesehatan_mental' => 'bg-purple-50 text-purple-700 border-purple-200',
+                        'artikel_islami' => 'bg-blue-50 text-blue-700 border-blue-200',
                         default => 'bg-slate-50 text-slate-700 border-slate-200',
+                    };
+
+                    $kategoriLabel = match($article->kategori) {
+                        'edukasi_kesehatan' => 'Edukasi Kesehatan',
+                        'fikih_wanita' => 'Fikih Wanita',
+                        'kesehatan_mental' => 'Kesehatan Mental',
+                        'artikel_islami' => 'Artikel Islami',
+                        default => $article->kategori,
                     };
                 @endphp
                 <div>
                     <span class="px-3.5 py-1.5 rounded-full text-xs font-bold border inline-block {{ $badgeStyle }}">
-                        {{ $article->kategori }}
+                        {{ $kategoriLabel }}
                     </span>
                 </div>
 
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-                    {{ $article->title }}
+                    {{ $article->judul ?? $article->title }}
                 </h1>
 
                 <div class="flex items-center gap-3 text-xs font-semibold text-slate-400">
@@ -40,15 +49,15 @@
             </div>
 
             <!-- Hero Image -->
-            @if($article->image_url)
+            @if($article->thumbnail || $article->image_url)
                 <div class="rounded-2xl overflow-hidden max-h-96 w-full bg-slate-100 border border-slate-100">
-                    <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="w-full h-full object-cover">
+                    <img src="{{ $article->thumbnail ?: $article->image_url }}" alt="{{ $article->judul ?? $article->title }}" class="w-full h-full object-cover">
                 </div>
             @endif
 
             <!-- Article Body Content -->
             <div class="prose prose-slate max-w-none text-slate-800 text-sm sm:text-base leading-relaxed space-y-4 font-normal">
-                {!! nl2br(e($article->content)) !!}
+                {!! nl2br(e($article->konten ?? $article->content)) !!}
             </div>
 
             <!-- Islamic Health Quote Box -->
@@ -69,9 +78,18 @@
                 <h3 class="text-lg font-extrabold text-slate-900">Artikel Terkait Lainnya</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     @foreach($relatedArticles as $rel)
+                        @php
+                            $relKategoriLabel = match($rel->kategori) {
+                                'edukasi_kesehatan' => 'Edukasi Kesehatan',
+                                'fikih_wanita' => 'Fikih Wanita',
+                                'kesehatan_mental' => 'Kesehatan Mental',
+                                'artikel_islami' => 'Artikel Islami',
+                                default => $rel->kategori,
+                            };
+                        @endphp
                         <a href="{{ route('ismuba.show', $rel->slug) }}" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all space-y-2 block">
-                            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">{{ $rel->kategori }}</span>
-                            <h4 class="text-xs font-bold text-slate-900 line-clamp-2">{{ $rel->title }}</h4>
+                            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">{{ $relKategoriLabel }}</span>
+                            <h4 class="text-xs font-bold text-slate-900 line-clamp-2">{{ $rel->judul ?? $rel->title }}</h4>
                         </a>
                     @endforeach
                 </div>
