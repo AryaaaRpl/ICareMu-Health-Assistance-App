@@ -11,7 +11,7 @@
         @endif
 
         <!-- 1. Hero Banner (Blue Card) -->
-        <div class="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-3xl p-8 text-white shadow-xl">
+        <div class="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div class="space-y-3 max-w-xl">
                     <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold uppercase tracking-wider text-blue-100">
@@ -20,14 +20,14 @@
                         </svg>
                         Student Health Hub
                     </div>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Pantau Kesehatanmu Hari Ini!</h1>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Pantau Kesehatanmu Hari Ini!</h1>
                     <p class="text-blue-100 text-sm sm:text-base leading-relaxed">
                         Gunakan fasilitas Smart School Screening, AI Assistant, dan layanan UKS Muhammadiyah untuk menjaga kesehatan fisik dan rohanimu secara optimal.
                     </p>
                 </div>
-                <div>
+                <div class="pt-2 md:pt-0">
                     <a href="{{ route('skrining.siswa') }}"
-                       class="px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-600 font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 group">
+                       class="w-full sm:w-auto justify-center px-6 py-3.5 bg-white hover:bg-blue-50 text-blue-600 font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 group">
                         <span>Mulai Skrining</span>
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
