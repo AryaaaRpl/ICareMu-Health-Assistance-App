@@ -143,13 +143,6 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <!-- Search input -->
-                    <div class="relative">
-                        <input type="text" placeholder="Cari data..." class="w-64 pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
 
                     <!-- Profile Link -->
                     <a href="{{ route('profile.edit') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-all" title="Edit Profile">

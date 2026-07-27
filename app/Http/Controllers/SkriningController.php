@@ -86,20 +86,24 @@ class SkriningController extends Controller
         $user = auth()->user();
         $sekolahId = $user->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
 
-        // Fetch real data from database
-        $jadwalSkrining = \App\Models\JadwalSkrining::latest()->get();
-        if ($jadwalSkrining->isEmpty()) {
-            $jadwalSkrining = \App\Models\JadwalSkrining::withoutGlobalScopes()->latest()->get();
+        // Fetch paginated data (20 items per page) for table performance
+        $jadwalSkrining = \App\Models\JadwalSkrining::latest()->paginate(20);
+        if ($jadwalSkrining->isEmpty() && \App\Models\JadwalSkrining::withoutGlobalScopes()->exists()) {
+            $jadwalSkrining = \App\Models\JadwalSkrining::withoutGlobalScopes()->latest()->paginate(20);
         }
         $jadwals = $jadwalSkrining;
 
-        // Fetch students for the "Input Hasil Skrining" dropdown
-        $siswas = \App\Models\User::where('role', 'siswa')->get();
+        // Fetch lightweight student list for dropdown menu
+        $siswas = \App\Models\User::where('role', 'siswa')
+            ->select(['id', 'name', 'email'])
+            ->get();
         if ($siswas->isEmpty()) {
-            $siswas = \App\Models\Siswa::withoutGlobalScopes()->get();
+            $siswas = \App\Models\Siswa::withoutGlobalScopes()
+                ->select(['id', 'nama_lengkap', 'nama'])
+                ->get();
         }
         if ($siswas->isEmpty()) {
-            $siswas = \App\Models\User::all();
+            $siswas = \App\Models\User::select(['id', 'name', 'email'])->get();
         }
 
         $viewName = view()->exists('admin.skrining') ? 'admin.skrining' : 'skrining.index';
