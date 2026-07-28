@@ -67,4 +67,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(MenstrualRecord::class, 'siswa_id');
     }
+
+    /**
+     * Get the AI conversations associated with the user.
+     */
+    public function aiConversations(): HasMany
+    {
+        return $this->hasMany(AiConversation::class);
+    }
 }

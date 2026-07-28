@@ -231,6 +231,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                {{ $inventaris->withQueryString()->links() }}
             </div>
 
             <!-- Table Footer -->

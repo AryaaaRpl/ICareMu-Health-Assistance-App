@@ -17,7 +17,7 @@ class InventarisUksWebController extends Controller
      */
     public function index(): View
     {
-        $inventaris = InventarisUks::latest()->get();
+        $inventaris = InventarisUks::latest()->paginate(10);
 
         return view('inventaris.index', compact('inventaris'));
     }

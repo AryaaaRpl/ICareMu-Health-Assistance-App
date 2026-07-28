@@ -15,9 +15,10 @@ class HealthRecordController extends Controller
      */
     public function index(): View
     {
-        $riwayatKesehatan = SkriningRecord::where('siswa_id', Auth::id())
+        $riwayatKesehatan = SkriningRecord::with('admin')
+            ->where('siswa_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return view('siswa.health-record', compact('riwayatKesehatan'));
     }

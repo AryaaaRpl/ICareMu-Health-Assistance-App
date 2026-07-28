@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\InventarisUks;
+use App\Models\JadwalSkrining;
+use App\Models\PesertaSkrining;
 use App\Models\SkriningRecord;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,7 +58,11 @@ class SkriningController extends Controller
     public function show(SkriningRecord $skrining): View
     {
         $skrining->load('siswa');
-        return view('uks.detail-skrining', compact('skrining'));
+        $obat = InventarisUks::where('kategori', 'Obat')
+            ->where('stok', '>', 0)
+            ->get();
+
+        return view('uks.detail-skrining', compact('skrining', 'obat'));
     }
 
     /**
@@ -64,47 +72,67 @@ class SkriningController extends Controller
     {
         $validated = $request->validate([
             'tindakan_uks' => ['required', 'string'],
-            'obat_diberikan' => ['nullable', 'string', 'max:255'],
+            'inventaris_id' => ['nullable', 'array'],
+            'inventaris_id.*' => ['exists:inventaris_uks,id'],
             'status_akhir' => ['required', 'in:kembali_ke_kelas,istirahat_di_uks,pulang,rujuk_rs'],
         ]);
 
+        $obatNames = [];
+
+        if (!empty($validated['inventaris_id'])) {
+            $selectedItems = InventarisUks::whereIn('id', $validated['inventaris_id'])->get();
+
+            foreach ($selectedItems as $item) {
+                if ($item->stok > 0) {
+                    $item->decrement('stok', 1);
+                    $obatNames[] = $item->nama_barang;
+                }
+            }
+        }
+
+        $obatText = !empty($obatNames) ? implode(', ', $obatNames) : null;
+
         $skrining->update([
             'tindakan_uks' => $validated['tindakan_uks'],
-            'obat_diberikan' => $validated['obat_diberikan'] ?? null,
+            'obat_diberikan' => $obatText,
             'waktu_ditindak' => now(),
             'status_akhir' => $validated['status_akhir'],
+            'admin_id' => auth()->id(),
         ]);
+
+        // Also sync/create Smart Health Record (RekamMedis) for the student
+        if (class_exists(\App\Models\RekamMedis::class) && $skrining->siswa_id) {
+            \App\Models\RekamMedis::create([
+                'sekolah_id' => $skrining->sekolah_id ?? auth()->user()->sekolah_id ?? 1,
+                'siswa_id' => $skrining->siswa_id,
+                'keluhan_utama' => is_array($skrining->gejala) ? implode(', ', $skrining->gejala) : ($skrining->keluhan_tambahan ?? 'Pemeriksaan UKS'),
+                'suhu' => $skrining->suhu_tubuh ?? 36.5,
+                'status_risiko' => $skrining->ai_status ?? 'sedang',
+                'status_penanganan' => $validated['status_akhir'],
+                'penanganan' => $validated['tindakan_uks'],
+                'catatan_medis' => $validated['tindakan_uks'] . ($obatText ? " | Obat: {$obatText}" : ''),
+                'tanggal' => now()->toDateString(),
+            ]);
+        }
 
         return redirect()->route('dashboard.uks')->with('success', 'Tindakan UKS & Rekam Medis berhasil diperbarui!');
     }
 
-    /**
-     * Display the screening schedules and student list for UKS Admin.
-     */
-    public function indexJadwal(): View
+    public function index(Request $request): View
     {
-        $user = auth()->user();
-        $sekolahId = $user->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
+        $sekolahId = auth()->user()->sekolah_id;
 
-        // Fetch real data from database
-        $jadwalSkrining = \App\Models\JadwalSkrining::latest()->get();
-        if ($jadwalSkrining->isEmpty()) {
-            $jadwalSkrining = \App\Models\JadwalSkrining::withoutGlobalScopes()->latest()->get();
-        }
-        $jadwals = $jadwalSkrining;
+        $skriningRecords = SkriningRecord::with('siswa')
+            ->where('sekolah_id', $sekolahId)
+            ->when($request->input('kelas'), fn($q, $kelas) => $q->whereHas('siswa', fn($sq) => $sq->where('kelas', $kelas)))
+            ->when($request->input('search'), fn($q, $search) => $q->whereHas('siswa', fn($sq) => $sq->where('name', 'like', "%{$search}%")))
+            ->latest()
+            ->paginate(10);
 
-        // Fetch students for the "Input Hasil Skrining" dropdown
-        $siswas = \App\Models\User::where('role', 'siswa')->get();
-        if ($siswas->isEmpty()) {
-            $siswas = \App\Models\Siswa::withoutGlobalScopes()->get();
-        }
-        if ($siswas->isEmpty()) {
-            $siswas = \App\Models\User::all();
-        }
+        $siswas = class_exists(User::class) ? User::all() : collect();
+        $jadwals = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->get() : collect();
 
-        $viewName = view()->exists('admin.skrining') ? 'admin.skrining' : 'skrining.index';
-
-        return view($viewName, compact('jadwalSkrining', 'jadwals', 'siswas'));
+        return view('skrining.index', compact('skriningRecords', 'siswas', 'jadwals'));
     }
 
     /**
@@ -144,30 +172,25 @@ class SkriningController extends Controller
     public function storePeserta(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jadwal_id' => ['nullable'],
-            'jadwal_skrining_id' => ['nullable'],
-            'siswa_id' => ['required'],
-            'status_kehadiran' => ['nullable', 'string'],
-            'catatan_hasil' => ['nullable', 'string'],
-            'catatan' => ['nullable', 'string'],
+            'siswa_id'          => ['required', 'integer', 'exists:users,id'],
+            'jadwal_id'         => ['required', 'integer', 'exists:jadwal_skrining,id'],
+            'status_kehadiran'  => ['required', 'string', 'in:Hadir,Tidak Hadir,Izin,Sakit'],
+            'catatan_hasil'     => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $user = auth()->user();
-        $sekolahId = $user->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
-        $jadwalId = (int) ($validated['jadwal_id'] ?? $validated['jadwal_skrining_id'] ?? 1);
+        $sekolahId = auth()->user()->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
 
-        $payload = [
-            'sekolah_id' => $sekolahId,
-            'jadwal_id' => $jadwalId,
-            'jadwal_skrining_id' => $jadwalId,
-            'siswa_id' => $validated['siswa_id'],
-            'status_kehadiran' => $validated['status_kehadiran'] ?? 'Hadir',
-            'catatan_hasil' => $validated['catatan_hasil'] ?? $validated['catatan'] ?? null,
-            'catatan' => $validated['catatan_hasil'] ?? $validated['catatan'] ?? null,
-        ];
+        PesertaSkrining::create([
+            'sekolah_id'         => $sekolahId,
+            'jadwal_id'          => $validated['jadwal_id'],
+            'jadwal_skrining_id' => $validated['jadwal_id'],
+            'siswa_id'           => $validated['siswa_id'],
+            'status_kehadiran'   => $validated['status_kehadiran'],
+            'catatan_hasil'      => $validated['catatan_hasil'] ?? null,
+            'catatan'            => $validated['catatan_hasil'] ?? null,
+            'admin_id'           => auth()->id(),
+        ]);
 
-        \App\Models\PesertaSkrining::create($payload);
-
-        return back()->with('success', 'Peserta & Hasil Skrining berhasil disimpan.');
+        return redirect()->route('skrining.index')->with('success', 'Hasil skrining berhasil dicatat.');
     }
 }

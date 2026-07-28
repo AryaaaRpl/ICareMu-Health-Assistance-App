@@ -20,7 +20,7 @@ class SkriningWebController extends Controller
      */
     public function index(): View
     {
-        $jadwalSkrining = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->get() : collect();
+        $jadwalSkrining = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->paginate(10) : collect();
         if ($jadwalSkrining->isEmpty() && class_exists(JadwalSkrining::class)) {
             $jadwalSkrining = JadwalSkrining::withoutGlobalScopes()->latest()->get();
         }
@@ -46,24 +46,35 @@ class SkriningWebController extends Controller
         $validated = $request->validate([
             'suhu_tubuh' => ['required', 'numeric', 'min:34', 'max:45'],
             'gejala' => ['nullable', 'array'],
-            'tekanan_darah' => ['nullable', 'string', 'max:50'],
             'catatan_keluhan' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $suhu = (float) $validated['suhu_tubuh'];
         $gejala = $request->input('gejala', []);
-        $keluhanStr = is_array($gejala) ? implode(', ', $gejala) : ($gejala ?? '');
+        $catatanKeluhan = $validated['catatan_keluhan'] ?? '';
 
-        if ($request->filled('catatan_keluhan')) {
-            $keluhanStr .= ($keluhanStr ? ' - ' : '') . $request->input('catatan_keluhan');
+        // Critical symptoms keywords dictionary for text-based triage
+        $criticalKeywords = ['mual', 'pusing', 'sesak', 'nyeri', 'muntah', 'demam', 'pingsan', 'darah'];
+
+        // Build composite complaints string from array symptoms and extra text
+        $keluhanStr = mb_strtolower(
+            (is_array($gejala) ? implode(' ', $gejala) : (string) $gejala) . ' ' . $catatanKeluhan
+        );
+
+        // Check if complaints contain any critical keyword
+        $hasCriticalSymptom = false;
+        foreach ($criticalKeywords as $keyword) {
+            if (str_contains($keluhanStr, $keyword)) {
+                $hasCriticalSymptom = true;
+                break;
+            }
         }
 
-        // Calculate health status
-        $statusKesehatan = 'sehat';
-        if ($suhu >= 38.0 || in_array('Demam', $gejala) || in_array('Mual', $gejala)) {
-            $statusKesehatan = 'butuh_penanganan';
-        } elseif ($suhu >= 37.3 || (count($gejala) > 0 && !in_array('Tidak Ada', $gejala))) {
-            $statusKesehatan = 'sakit_ringan';
+        // Evaluate triage status considering both temperature (> 37.5) and symptoms
+        if ($suhu > 37.5 || $hasCriticalSymptom) {
+            $aiStatus = 'Perlu Perhatian';
+        } else {
+            $aiStatus = 'Normal';
         }
 
         if (class_exists(SkriningRecord::class)) {
@@ -71,9 +82,9 @@ class SkriningWebController extends Controller
                 'siswa_id' => auth()->id(),
                 'sekolah_id' => auth()->user()->sekolah_id ?? null,
                 'suhu_tubuh' => $suhu,
-                'tekanan_darah' => $validated['tekanan_darah'] ?? null,
-                'keluhan' => $keluhanStr ?: 'Tidak Ada',
-                'status_kesehatan' => $statusKesehatan,
+                'gejala' => $gejala,
+                'keluhan_tambahan' => $validated['catatan_keluhan'] ?? null,
+                'ai_status' => $aiStatus,
             ]);
         }
 

@@ -34,11 +34,15 @@ Route::middleware('auth')->group(function () {
 
         // Smart Health Record (Rekam Medis)
         Route::get('/rekam-medis', [RekamMedisWebController::class, 'index'])->name('rekam-medis.index');
+        Route::get('/rekam-medis/{id}', [RekamMedisWebController::class, 'show'])->name('rekam-medis.show');
         Route::post('/rekam-medis', [RekamMedisWebController::class, 'store'])->name('rekam-medis.store');
 
         // Skrining Kesehatan Admin & Detail Triage
-        Route::get('/skrining', [\App\Http\Controllers\SkriningController::class, 'indexJadwal'])->name('skrining.index');
+        Route::get('/skrining', [\App\Http\Controllers\SkriningController::class, 'index'])->name('skrining.index');
         Route::get('/skrining/{skrining}', [\App\Http\Controllers\SkriningController::class, 'show'])->name('skrining.show');
+        Route::get('/skrining/{skrining}/tindakan', function ($skrining) {
+            return redirect()->route('skrining.show', $skrining);
+        });
         Route::put('/skrining/{skrining}/tindakan', [\App\Http\Controllers\SkriningController::class, 'updateTindakan'])->name('skrining.tindakan.update');
         Route::post('/skrining/jadwal', [\App\Http\Controllers\SkriningController::class, 'storeJadwal'])->name('skrining.jadwal.store');
         Route::post('/skrining/peserta', [\App\Http\Controllers\SkriningController::class, 'storePeserta'])->name('skrining.peserta.store');
@@ -62,6 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('ai.index');
         Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->name('ai.analyze');
         Route::post('/ai/chat', [AiAssistantController::class, 'chat'])->name('ai.chat');
+        Route::get('/ai/history', [AiAssistantController::class, 'getHistory'])->name('ai.history');
 
         Route::get('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'index'])->name('ismuba.index');
         Route::post('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'store'])->name('ismuba.store');

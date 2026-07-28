@@ -67,6 +67,24 @@
                             </div>
                         </div>
 
+                        <!-- Jenis Kelamin -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Jenis Kelamin</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-xl bg-gray-50/50 cursor-pointer hover:bg-blue-50/50 hover:border-blue-300 transition-all">
+                                    <input type="radio" name="jenis_kelamin" value="Laki-laki" class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" required {{ old('jenis_kelamin') == 'Laki-laki' ? 'checked' : '' }}>
+                                    <span class="text-xs font-semibold text-gray-700">Laki-laki</span>
+                                </label>
+                                <label class="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-xl bg-gray-50/50 cursor-pointer hover:bg-blue-50/50 hover:border-blue-300 transition-all">
+                                    <input type="radio" name="jenis_kelamin" value="Perempuan" class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" required {{ old('jenis_kelamin') == 'Perempuan' ? 'checked' : '' }}>
+                                    <span class="text-xs font-semibold text-gray-700">Perempuan</span>
+                                </label>
+                            </div>
+                            @error('jenis_kelamin')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4">
                             <!-- Email -->
                             <div>

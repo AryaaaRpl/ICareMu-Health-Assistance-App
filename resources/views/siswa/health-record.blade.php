@@ -119,16 +119,28 @@
                     <div class="pt-2">
                         @if($record->tindakan_uks)
                             <div class="bg-gradient-to-r from-teal-50 via-emerald-50 to-cyan-50 p-5 rounded-2xl border border-teal-200/70 space-y-3 shadow-sm">
-                                <div class="flex items-center justify-between border-b border-teal-200/50 pb-2.5">
+                                <div class="flex items-start justify-between border-b border-teal-200/50 pb-2.5">
                                     <div class="flex items-center gap-2">
                                         <span class="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center text-xs font-bold">🩺</span>
                                         <h4 class="text-xs font-extrabold uppercase tracking-wider text-teal-900">Catatan Penanganan Petugas UKS</h4>
                                     </div>
-                                    @if($record->waktu_ditindak)
-                                        <span class="text-[10px] font-bold text-teal-700">
-                                            Ditindak: {{ $record->waktu_ditindak->format('H:i') }} WIB
-                                        </span>
-                                    @endif
+                                    <div class="flex flex-col items-end gap-0.5">
+                                        @if($record->admin)
+                                            <div class="flex items-center gap-1.5">
+                                                <div class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                                                    {{ strtoupper(substr($record->admin->name, 0, 1)) }}
+                                                </div>
+                                                <span class="text-[11px] font-medium text-teal-800 tracking-tight">
+                                                    Ditangani oleh: <strong class="font-extrabold text-teal-900">{{ $record->admin->name }}</strong>
+                                                </span>
+                                            </div>
+                                        @endif
+                                        @if($record->waktu_ditindak)
+                                            <span class="text-[10px] font-bold text-teal-700 leading-tight">
+                                                Ditindak: {{ $record->waktu_ditindak->format('H:i') }} WIB
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -186,6 +198,10 @@
                     </div>
                 </div>
             @endforelse
+        </div>
+
+        <div class="mt-6">
+            {{ $riwayatKesehatan->withQueryString()->links() }}
         </div>
     </div>
 </x-app-layout>

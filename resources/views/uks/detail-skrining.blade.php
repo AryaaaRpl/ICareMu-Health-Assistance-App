@@ -156,21 +156,35 @@
                             @enderror
                         </div>
 
-                        <!-- Obat Diberikan Input -->
-                        <div class="space-y-2">
-                            <label for="obat_diberikan" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700">
-                                Obat Yang Diberikan <span class="text-slate-400 font-normal">(Opsional)</span>
+                        <!-- Obat Diberikan Dropdown (TomSelect UI with Z-Index Stacking Fix) -->
+                        <div class="space-y-2 relative z-50">
+                            <label for="inventaris_id" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                                Obat Yang Diberikan <span class="text-slate-400 font-normal">(Pilih satu atau lebih, otomatis mengurangi stok)</span>
                             </label>
-                            <input type="text" id="obat_diberikan" name="obat_diberikan" value="{{ old('obat_diberikan', $skrining->obat_diberikan) }}"
-                                placeholder="Contoh: Paracetamol 500mg (1 tablet), Antasida, Minyak Kayu Putih"
-                                class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3.5 px-4 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all">
-                            @error('obat_diberikan')
+
+                            @if($skrining->obat_diberikan)
+                                <div class="mb-2 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center gap-2">
+                                    <span>💊</span>
+                                    <span><strong>Obat Terdaftar Sebelumnya:</strong> {{ $skrining->obat_diberikan }}</span>
+                                </div>
+                            @endif
+
+                            <select id="inventaris_id" name="inventaris_id[]" multiple placeholder="Cari & pilih obat..." autocomplete="off" class="w-full">
+                                @forelse($obat ?? [] as $item)
+                                    <option value="{{ $item->id }}">
+                                        {{ $item->nama_barang }} (Stok: {{ $item->stok }} {{ $item->satuan ?? 'pcs' }})
+                                    </option>
+                                @empty
+                                @endforelse
+                            </select>
+
+                            @error('inventaris_id')
                                 <p class="text-xs text-rose-500 font-semibold">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <!-- Status Akhir Dropdown -->
-                        <div class="space-y-2">
+                        <div class="space-y-2 relative z-10">
                             <label for="status_akhir" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700">
                                 Status Akhir Siswa <span class="text-rose-500">*</span>
                             </label>
@@ -188,7 +202,7 @@
                         </div>
 
                         <!-- Submit Button -->
-                        <div class="pt-4">
+                        <div class="pt-4 relative z-0">
                             <button type="submit"
                                 class="w-full py-4 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,4 +216,58 @@
             </div>
         </div>
     </div>
+
+    <!-- TomSelect Styles & Script Injection -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        .ts-wrapper {
+            position: relative;
+            z-index: 9999 !important;
+        }
+        .ts-control {
+            border-radius: 1rem !important;
+            padding: 0.75rem 1rem !important;
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+        }
+        .ts-control.focus {
+            background-color: #ffffff !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+        }
+        .ts-dropdown {
+            border-radius: 1rem !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e2e8f0 !important;
+            font-size: 0.75rem !important;
+            overflow: hidden !important;
+            z-index: 99999 !important;
+            background-color: #ffffff !important;
+        }
+        .ts-wrapper.multi .ts-control > div {
+            border-radius: 0.5rem !important;
+            background: #e0e7ff !important;
+            color: #3730a3 !important;
+            font-weight: 700 !important;
+            padding: 2px 8px !important;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectEl = document.getElementById('inventaris_id');
+            if (selectEl) {
+                new TomSelect('#inventaris_id', {
+                    plugins: ['remove_button'],
+                    maxOptions: 50,
+                    create: false,
+                    dropdownParent: 'body',
+                    placeholder: '🔍 Cari & pilih obat...',
+                    noResultsText: 'Obat tidak ditemukan',
+                });
+            }
+        });
+    </script>
 </x-app-layout>

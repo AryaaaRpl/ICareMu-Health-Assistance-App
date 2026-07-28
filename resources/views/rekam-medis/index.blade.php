@@ -317,6 +317,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                {{ $records->withQueryString()->links() }}
             </div>
 
             <!-- Table Footer Pagination bar -->

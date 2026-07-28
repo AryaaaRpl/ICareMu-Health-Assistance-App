@@ -23,6 +23,7 @@ class PesertaSkrining extends Model
         'status_kehadiran',
         'catatan_hasil',
         'catatan',
+        'admin_id',
     ];
 
     /**

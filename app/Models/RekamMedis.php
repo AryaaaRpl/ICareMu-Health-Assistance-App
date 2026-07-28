@@ -28,6 +28,7 @@ class RekamMedis extends Model
         'status_penanganan',
         'status',
         'penanganan',
+        'catatan_medis',
         'tanggal',
     ];
 

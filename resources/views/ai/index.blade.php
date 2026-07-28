@@ -1,4 +1,7 @@
 <x-app-layout>
+    <!-- Marked.js for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <div x-data="aiChat()" class="flex flex-col h-[calc(100vh-7rem)] max-w-5xl mx-auto bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden">
         <!-- Chat Header -->
         <div class="px-6 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between shadow-md">
@@ -13,7 +16,7 @@
                     <h1 class="text-base font-extrabold tracking-tight flex items-center gap-2">
                         ICARE AI Health Assistant
                         <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">
-                            DeepSeek V4 Flash
+                            Gemini Flash
                         </span>
                     </h1>
                     <p class="text-xs text-slate-300 font-medium">Asisten Kesehatan & Pertolongan Pertama Sekolah</p>
@@ -24,7 +27,7 @@
             @if(count($rekamMedisList) > 0)
                 <div class="hidden sm:block">
                     <select x-on:change="sendRecordAnalysis($event.target.value)" class="bg-white/10 text-white text-xs rounded-xl border border-white/20 py-2 px-3 focus:ring-2 focus:ring-indigo-400 focus:outline-none backdrop-blur-md">
-                        <option value="" class="bg-slate-900 text-white">-- Analisis Rekam Medis Siswa --</option>
+                        <option value="" class="bg-slate-900 text-white">-- Analisis Rekam Medis Saya --</option>
                         @foreach($rekamMedisList as $rec)
                             @php
                                 $sName = $rec->siswa ? ($rec->siswa->name ?? $rec->siswa->nama_lengkap ?? 'Siswa #'.$rec->siswa_id) : 'Siswa #'.$rec->siswa_id;
@@ -43,13 +46,13 @@
             <template x-for="(msg, index) in messages" :key="index">
                 <div>
                     <!-- AI Message Bubble -->
-                    <template x-if="msg.role === 'ai'">
+                    <template x-if="msg.role === 'ai' || msg.role === 'assistant'">
                         <div class="flex items-start gap-3 max-w-3xl animate-fadeIn">
                             <div class="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-md">
                                 AI
                             </div>
-                            <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-none p-5 shadow-sm text-slate-800 text-sm leading-relaxed space-y-2">
-                                <div class="whitespace-pre-line font-normal" x-text="msg.text"></div>
+                            <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-none p-5 shadow-sm text-slate-800 text-sm leading-relaxed">
+                                <div class="prose prose-sm prose-slate max-w-none prose-a:text-indigo-600 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline" x-html="parseMarkdown(msg.text || msg.content)"></div>
                             </div>
                         </div>
                     </template>
@@ -58,7 +61,7 @@
                     <template x-if="msg.role === 'user'">
                         <div class="flex justify-end animate-fadeIn">
                             <div class="max-w-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl rounded-tr-none px-5 py-3.5 shadow-md text-sm font-medium leading-relaxed whitespace-pre-line">
-                                <span x-text="msg.text"></span>
+                                <span x-text="msg.text || msg.content"></span>
                             </div>
                         </div>
                     </template>
@@ -197,6 +200,14 @@
                     if (prompt) {
                         this.sendMessage(prompt);
                     }
+                },
+
+                parseMarkdown(text) {
+                    if (!text) return '';
+                    if (typeof marked !== 'undefined') {
+                        return marked.parse(text);
+                    }
+                    return text;
                 },
 
                 scrollToBottom() {

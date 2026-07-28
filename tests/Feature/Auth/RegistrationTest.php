@@ -26,6 +26,7 @@ class RegistrationTest extends TestCase
             'password' => 'password',
             'password_confirmation' => 'password',
             'sekolah_id' => $sekolah->id,
+            'jenis_kelamin' => 'Laki-laki',
         ]);
 
         $this->assertAuthenticated();

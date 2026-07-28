@@ -26,6 +26,7 @@ class SkriningRecord extends Model
         'obat_diberikan',
         'waktu_ditindak',
         'status_akhir',
+        'admin_id',
     ];
 
     protected $casts = [
@@ -37,6 +38,11 @@ class SkriningRecord extends Model
     public function siswa(): BelongsTo
     {
         return $this->belongsTo(User::class, 'siswa_id');
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 
     public function sekolah(): BelongsTo

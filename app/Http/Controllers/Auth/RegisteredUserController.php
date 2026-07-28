@@ -38,6 +38,7 @@ class RegisteredUserController extends Controller
             'nama_lengkap' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', Rules\Password::defaults()],
+            'jenis_kelamin' => ['required', 'string', 'in:Laki-laki,Perempuan,L,P'],
 
             // Step 2 & 3: Additional student & tenant wizard fields
             'sekolah_id' => ['required', 'exists:sekolahs,id'],
@@ -51,11 +52,19 @@ class RegisteredUserController extends Controller
 
         $name = $validated['nama_lengkap'] ?? $validated['name'] ?? 'Siswa';
 
+        $genderMap = [
+            'Laki-laki' => 'L',
+            'Perempuan' => 'P',
+            'L' => 'L',
+            'P' => 'P',
+        ];
+
         $userData = [
             'name' => $name,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'sekolah_id' => $request->sekolah_id,
+            'jenis_kelamin' => $genderMap[$validated['jenis_kelamin']] ?? 'P',
         ];
 
         // Map wizard fields to user model payload if present

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\RekamMedis;
+use App\Models\SkriningRecord;
 use App\Models\User;
 use App\Services\Health\IMTCalculatorService;
 use Illuminate\Http\RedirectResponse;
@@ -19,13 +20,13 @@ class RekamMedisWebController extends Controller
      */
     public function index(): View
     {
-        $records = \App\Models\SkriningRecord::with('siswa')->latest()->get();
+        $records = RekamMedis::with('siswa')->latest()->paginate(10);
         $rekam_medis = $records;
 
         $totalSkrining = $records->count();
-        $statusNormal = $records->whereIn('ai_status', ['sehat'])->count();
-        $perluPerhatian = $records->filter(fn($r) => (float)$r->suhu_tubuh > 37.5 || in_array($r->ai_status, ['observasi_uks', 'darurat']))->count();
-        $tindakanDirujuk = $records->whereIn('status_akhir', ['rujuk_rs'])->count();
+        $statusNormal = $records->whereIn('status', ['Selesai', 'Selesai / Sehat'])->count();
+        $perluPerhatian = $records->filter(fn($r) => (float)$r->suhu > 37.5 || in_array($r->status, ['Istirahat di UKS', 'Diberi Obat']))->count();
+        $tindakanDirujuk = $records->whereIn('status', ['Dirujuk', 'Dirujuk ke Rumah Sakit / Puskesmas'])->count();
 
         $siswaList = User::where('role', 'siswa')->orderBy('name', 'asc')->get();
         if ($siswaList->isEmpty()) {
@@ -46,6 +47,16 @@ class RekamMedisWebController extends Controller
     }
 
     /**
+     * Display a read-only detail view of a single screening record.
+     */
+    public function show($id): View
+    {
+        $record = SkriningRecord::with('siswa', 'admin')->findOrFail($id);
+
+        return view('rekam-medis.show', compact('record'));
+    }
+
+    /**
      * Store a newly created medical record.
      */
     public function store(Request $request, IMTCalculatorService $imtService): RedirectResponse
@@ -56,8 +67,8 @@ class RekamMedisWebController extends Controller
             'keluhan_utama' => ['required', 'string'],
             'penanganan' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
-            'tinggi_badan' => ['nullable', 'numeric'],
-            'berat_badan' => ['nullable', 'numeric'],
+            'tinggi_badan' => ['required', 'numeric', 'min:30', 'max:250'],
+            'berat_badan' => ['required', 'numeric', 'min:2', 'max:300'],
         ]);
 
         $statusAkhirMap = [
@@ -92,8 +103,8 @@ class RekamMedisWebController extends Controller
 
         // Also save to RekamMedis if exists
         if (class_exists(RekamMedis::class)) {
-            $tinggiBadan = (float) ($validated['tinggi_badan'] ?? 165);
-            $beratBadan = (float) ($validated['berat_badan'] ?? 55);
+            $tinggiBadan = (float) $validated['tinggi_badan'];
+            $beratBadan = (float) $validated['berat_badan'];
             $imtData = $imtService->calculate($beratBadan, $tinggiBadan);
 
             RekamMedis::create([
