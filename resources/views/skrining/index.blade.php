@@ -275,4 +275,17 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function preventDoubleSubmit(form) {
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                const span = btn.querySelector('span');
+                if (span) {
+                    span.innerText = 'Menyimpan...';
+                }
+            }
+        }
+    </script>
 </x-app-layout>

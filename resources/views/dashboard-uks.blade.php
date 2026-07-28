@@ -4,32 +4,32 @@
 
     <div class="space-y-8 max-w-7xl mx-auto">
         <!-- Dashboard Banner Header -->
-        <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-8 text-white shadow-xl border border-slate-800">
+        <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div class="space-y-2">
                     <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold uppercase tracking-wider">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                         UKS Analytics Center Live
                     </div>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Dashboard Layanan UKS</h1>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Dashboard Layanan UKS</h1>
                     <p class="text-slate-300 text-sm max-w-xl">
                         Monitor kesehatan siswa, tren penyakit, jadwal skrining medis, dan inventaris obat secara real-time.
                     </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <a href="{{ route('dashboard.export') }}" target="_blank" class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 border border-white/10 backdrop-blur-md">
+                <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+                    <a href="{{ route('dashboard.export') }}" target="_blank" class="justify-center px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 border border-white/10 backdrop-blur-md">
                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Export Laporan PDF
                     </a>
-                    <a href="{{ route('rekam-medis.index') }}" class="px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2">
+                    <a href="{{ route('rekam-medis.index') }}" class="justify-center px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                         Catat Rekam Medis
                     </a>
-                    <a href="{{ route('ai.index') }}" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2">
+                    <a href="{{ route('ai.index') }}" class="justify-center px-4 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2">
                         🤖 Asisten AI UKS
                     </a>
                 </div>

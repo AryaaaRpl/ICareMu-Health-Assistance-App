@@ -44,8 +44,8 @@ Route::middleware('auth')->group(function () {
             return redirect()->route('skrining.show', $skrining);
         });
         Route::put('/skrining/{skrining}/tindakan', [\App\Http\Controllers\SkriningController::class, 'updateTindakan'])->name('skrining.tindakan.update');
-        Route::post('/skrining/jadwal', [\App\Http\Controllers\SkriningController::class, 'storeJadwal'])->name('skrining.jadwal.store');
-        Route::post('/skrining/peserta', [\App\Http\Controllers\SkriningController::class, 'storePeserta'])->name('skrining.peserta.store');
+        Route::post('/skrining/jadwal', [\App\Http\Controllers\SkriningController::class, 'storeJadwal'])->middleware('throttle:10,1')->name('skrining.jadwal.store');
+        Route::post('/skrining/peserta', [\App\Http\Controllers\SkriningController::class, 'storePeserta'])->middleware('throttle:10,1')->name('skrining.peserta.store');
 
         // Inventaris UKS
         Route::get('/inventaris', [InventarisUksWebController::class, 'index'])->name('inventaris.index');
