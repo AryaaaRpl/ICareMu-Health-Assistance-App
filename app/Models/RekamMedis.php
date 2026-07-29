@@ -15,6 +15,8 @@ class RekamMedis extends Model
 
     protected $table = 'rekam_medis';
 
+    protected $guarded = ['id'];
+
     protected $fillable = [
         'sekolah_id',
         'siswa_id',
@@ -30,8 +32,14 @@ class RekamMedis extends Model
         'penanganan',
         'catatan_medis',
         'tanggal',
+        'created_by',
     ];
 
+   public function admin()
+    {
+        // Panggil User::class, pakai kolom 'created_by'
+        return $this->belongsTo(User::class, 'created_by');
+    }
     /**
      * Get the student (user/siswa) associated with the medical record.
      */

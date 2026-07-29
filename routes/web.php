@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\AiAssistantController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Web\EdukasiIsmubaController;
 use App\Http\Controllers\Web\InventarisUksWebController;
 use App\Http\Controllers\Web\MenstrualHealthController;
 use App\Http\Controllers\Web\RekamMedisWebController;
+use App\Http\Controllers\Web\RiwayatKunjunganSiswaController;
 use App\Http\Controllers\Web\SkriningWebController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +62,7 @@ Route::middleware('auth')->group(function () {
         })->name('skrining.siswa');
         Route::post('/skrining-harian', [\App\Http\Controllers\SkriningController::class, 'storeStudent'])->name('skrining.store');
 
+        Route::get('/riwayat-kunjungan', [RiwayatKunjunganSiswaController::class, 'index'])->name('siswa.riwayat');
         // Smart Health Record Siswa
         Route::get('/health-record', [\App\Http\Controllers\HealthRecordController::class, 'index'])->name('health-record.index');
 
@@ -67,6 +70,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->name('ai.analyze');
         Route::post('/ai/chat', [AiAssistantController::class, 'chat'])->name('ai.chat');
         Route::get('/ai/history', [AiAssistantController::class, 'getHistory'])->name('ai.history');
+        Route::post('/api/chat/send', [ChatController::class, 'sendMessage'])->name('api.chat.send');
 
         Route::get('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'index'])->name('ismuba.index');
         Route::post('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'store'])->name('ismuba.store');

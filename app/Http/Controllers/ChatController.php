@@ -75,17 +75,19 @@ class ChatController extends Controller
         // =========================================================================
         $aiResponseText = $aiService->analyzeText($validated['message']);
 
+        $parsedAiResponse = Str::markdown($aiResponseText);
+
         // 5. Store AI assistant response in database
         $assistantMessage = $conversation->messages()->create([
             'role' => 'assistant',
-            'content' => $aiResponseText,
+            'content' => $parsedAiResponse,
         ]);
 
         return response()->json([
             'success' => true,
             'conversation_id' => $conversation->id,
             'user_message' => $userMessage,
-            'reply' => $aiResponseText,
+            'reply' => $parsedAiResponse,
             'assistant_message' => $assistantMessage,
         ]);
     }

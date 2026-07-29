@@ -122,6 +122,9 @@
                         </label>
                     </div>
 
+                    <div class="flex items-center justify-between">
+                        <p>Belum Punya Akun? <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800">Daftar di sini</a></p>
+                    </div>
                     <!-- Submit Button -->
                     <div>
                         <button type="submit" 

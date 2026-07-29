@@ -157,6 +157,7 @@
             @endif
 
             <!-- Item 6: Riwayat Kunjungan UKS -->
+             @if(auth()->user()->role === 'super_admin')
             <a href="{{ route('rekam-medis.index') }}"
                class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all flex items-center justify-between group">
                 <div class="flex items-center gap-4">
@@ -176,7 +177,29 @@
                     </svg>
                 </div>
             </a>
-
+            @endif
+               
+                 @if(auth()->user()->role === 'siswa')
+            <a href="{{ route('siswa.riwayat') }}"
+               class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-105 transition-transform">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 group-hover:text-amber-600 transition-colors">Riwayat Kunjungan UKS</h3>
+                        <p class="text-xs text-slate-400 font-medium">Catatan konsultasi dan istirahat di ruang UKS</p>
+                    </div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-amber-600 text-slate-400 group-hover:text-white flex items-center justify-center transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+             @endif
             <!-- Item 7: Profil Saya -->
             <a href="{{ route('profile.edit') }}"
                class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex items-center justify-between group">

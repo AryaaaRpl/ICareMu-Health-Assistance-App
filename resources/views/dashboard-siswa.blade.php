@@ -147,7 +147,7 @@
             @endif
 
             <!-- Item 6: Riwayat Kunjungan UKS -->
-            <a href="{{ route('rekam-medis.index') }}"
+            <a href="{{ url('/riwayat-kunjungan') }}"
                class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all flex items-center justify-between group">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-105 transition-transform">

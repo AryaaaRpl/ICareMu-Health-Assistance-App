@@ -1,89 +1,4 @@
 <x-app-layout>
-    @php
-        // Fallback dummy data for $rekam_medis if not passed from controller
-        $rekam_medis = $rekam_medis ?? [
-            (object)[
-                'id' => 1,
-                'tanggal' => '2026-07-23',
-                'siswa' => (object)['id' => 101, 'nama' => 'Ahmad Faiz Al-Fatih', 'nisn' => '0081234567', 'golongan_darah' => 'O'],
-                'keluhan_utama' => 'Demam tinggi & pusing sejak pagi',
-                'tinggi_badan' => 168,
-                'berat_badan' => 62,
-                'suhu' => 38.2,
-                'tekanan_darah' => '120/80',
-                'imt_score' => 22.0,
-                'penanganan' => 'Diberikan Paracetamol 500mg, istirahat di ruang UKS 1 jam.',
-                'status' => 'Istirahat di UKS',
-                'status_color' => 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm',
-            ],
-            (object)[
-                'id' => 2,
-                'tanggal' => '2026-07-23',
-                'siswa' => (object)['id' => 102, 'nama' => 'Siti Aminah Az-Zahra', 'nisn' => '0072345678', 'golongan_darah' => 'A'],
-                'keluhan_utama' => 'Nyeri perut & mual (Asam lambung)',
-                'tinggi_badan' => 155,
-                'berat_badan' => 41,
-                'suhu' => 36.6,
-                'tekanan_darah' => '110/70',
-                'imt_score' => 17.1,
-                'penanganan' => 'Diberikan Antasida tablet, minum air hangat.',
-                'status' => 'Diberi Obat',
-                'status_color' => 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm',
-            ],
-            (object)[
-                'id' => 3,
-                'tanggal' => '2026-07-22',
-                'siswa' => (object)['id' => 103, 'nama' => 'Budi Santoso Prabowo', 'nisn' => '0063456789', 'golongan_darah' => 'B'],
-                'keluhan_utama' => 'Terpeleset di lapangan, pergelangan kaki terkilir',
-                'tinggi_badan' => 172,
-                'berat_badan' => 96,
-                'suhu' => 37.8,
-                'tekanan_darah' => '130/85',
-                'imt_score' => 32.4,
-                'penanganan' => 'Kompres es pada ankle kanan, menghubungi wali murid untuk penanganan lanjut.',
-                'status' => 'Dirujuk',
-                'status_color' => 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm',
-            ],
-            (object)[
-                'id' => 4,
-                'tanggal' => '2026-07-21',
-                'siswa' => (object)['id' => 104, 'nama' => 'Nurul Huda Rahmawati', 'nisn' => '0084567890', 'golongan_darah' => 'AB'],
-                'keluhan_utama' => 'Pemeriksaan fisik rutin berkala',
-                'tinggi_badan' => 160,
-                'berat_badan' => 55,
-                'suhu' => 36.5,
-                'tekanan_darah' => '115/75',
-                'imt_score' => 21.5,
-                'penanganan' => 'Kondisi sehat secara umum, diedukasi hidrasi cukup.',
-                'status' => 'Selesai',
-                'status_color' => 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm',
-            ],
-            (object)[
-                'id' => 5,
-                'tanggal' => '2026-07-20',
-                'siswa' => (object)['id' => 105, 'nama' => 'Rizqi Pratama Wijaya', 'nisn' => '0075678981', 'golongan_darah' => 'O'],
-                'keluhan_utama' => 'Lemas dan flu ringan',
-                'tinggi_badan' => 175,
-                'berat_badan' => 79,
-                'suhu' => 37.1,
-                'tekanan_darah' => '120/80',
-                'imt_score' => 25.8,
-                'penanganan' => 'Istirahat singkat, diberikan vitamin C.',
-                'status' => 'Selesai',
-                'status_color' => 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm',
-            ],
-        ];
-
-        // Dummy data for dropdown options if $siswaList not passed
-        $siswaList = $siswaList ?? $siswas ?? [
-            (object)['id' => 101, 'name' => 'Ahmad Faiz Al-Fatih (X MIPA 1)'],
-            (object)['id' => 102, 'name' => 'Siti Aminah Az-Zahra (XII IPS 2)'],
-            (object)['id' => 103, 'name' => 'Budi Santoso Prabowo (XI MIPA 3)'],
-            (object)['id' => 104, 'name' => 'Nurul Huda Rahmawati (X MIPA 2)'],
-            (object)['id' => 105, 'name' => 'Rizqi Pratama Wijaya (XI MIPA 1)'],
-        ];
-        $siswas = $siswaList;
-    @endphp
 
     <div x-data="{ openModal: false, search: '', statusFilter: '' }" class="space-y-6">
         
@@ -298,12 +213,12 @@
                                                 Tindak UKS
                                             </a>
                                         @else
-                                            <button title="Lihat Detail" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
+                                            <a href="{{ route('rekam-medis.show', $row->id) }}" title="Lihat Detail" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                 </svg>
-                                            </button>
+                                            </a>
                                         @endif
                                     </div>
                                 </td>

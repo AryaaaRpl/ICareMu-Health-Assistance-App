@@ -20,6 +20,7 @@ class RekamMedisWebController extends Controller
      */
     public function index(): View
     {
+
         $records = RekamMedis::with('siswa')->latest()->paginate(10);
         $rekam_medis = $records;
 
@@ -42,7 +43,7 @@ class RekamMedisWebController extends Controller
             'perluPerhatian',
             'tindakanDirujuk',
             'siswas',
-            'siswaList'
+            'siswaList',
         ));
     }
 
@@ -51,8 +52,13 @@ class RekamMedisWebController extends Controller
      */
     public function show($id): View
     {
-        $record = SkriningRecord::with('siswa', 'admin')->findOrFail($id);
+        
+        $record = RekamMedis::with('siswa', 'admin')->find($id);
 
+    // Kasih jebakan batman
+    if (!$record) {
+        // dd("Skakmat! Data dengan ID {$id} beneran GAK ADA di database brok!");
+    }
         return view('rekam-medis.show', compact('record'));
     }
 
@@ -120,6 +126,7 @@ class RekamMedisWebController extends Controller
                 'imt_score' => $imtData['imt_score'],
                 'status_risiko' => $imtData['status_risiko'],
                 'tanggal' => now()->toDateString(),
+                'created_by' => auth()->id(),
             ]);
         }
 
