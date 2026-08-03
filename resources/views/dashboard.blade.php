@@ -133,8 +133,8 @@
                 </div>
             </a>
 
-            <!-- Item 5: Menstrual Health Monitoring (Strictly Female Students Only) -->
-            @if(auth()->user()->jenis_kelamin === 'P')
+            <!-- Item 5: Menstrual Health Monitoring -->
+            @if(in_array(auth()->user()->role, ['super_admin', 'admin_super']) || auth()->user()->jenis_kelamin === 'P')
                 <a href="{{ route('menstrual.index') }}"
                    class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all flex items-center justify-between group">
                     <div class="flex items-center gap-4">
@@ -145,7 +145,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-slate-900 group-hover:text-rose-600 transition-colors">Menstrual Health Monitoring</h3>
-                            <p class="text-xs text-slate-400 font-medium">Pencatatan siklus haid mandiri & prediksi haid</p>
+                            <p class="text-xs text-slate-400 font-medium">Pemantauan siklus haid & histori kesehatan reproduksi</p>
                         </div>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-rose-600 text-slate-400 group-hover:text-white flex items-center justify-center transition-all">

@@ -55,25 +55,25 @@ Route::middleware('auth')->group(function () {
     });
 
     // Student & AI Assistant & Edukasi Routes
-    Route::middleware('role:siswa,admin_uks,super_admin,petugas_uks')->group(function () {
+    Route::middleware('role:siswa,admin_uks,super_admin,petugas_uks,guru_ismuba')->group(function () {
         // Skrining Mandiri Siswa
         Route::get('/skrining-harian', function () {
             return view('siswa.skrining');
         })->name('skrining.siswa');
-        Route::post('/skrining-harian', [\App\Http\Controllers\SkriningController::class, 'storeStudent'])->name('skrining.store');
+        Route::post('/skrining-harian', [\App\Http\Controllers\SkriningController::class, 'storeStudent'])->middleware('throttle:10,1')->name('skrining.store');
 
         Route::get('/riwayat-kunjungan', [RiwayatKunjunganSiswaController::class, 'index'])->name('siswa.riwayat');
         // Smart Health Record Siswa
         Route::get('/health-record', [\App\Http\Controllers\HealthRecordController::class, 'index'])->name('health-record.index');
 
         Route::get('/ai-assistant', [AiAssistantController::class, 'index'])->name('ai.index');
-        Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->name('ai.analyze');
-        Route::post('/ai/chat', [AiAssistantController::class, 'chat'])->name('ai.chat');
+        Route::post('/ai-assistant/analyze', [AiAssistantController::class, 'analyze'])->middleware('throttle:5,1')->name('ai.analyze');
+        Route::post('/ai/chat', [AiAssistantController::class, 'chat'])->middleware('throttle:15,1')->name('ai.chat');
         Route::get('/ai/history', [AiAssistantController::class, 'getHistory'])->name('ai.history');
-        Route::post('/api/chat/send', [ChatController::class, 'sendMessage'])->name('api.chat.send');
+        Route::post('/api/chat/send', [ChatController::class, 'sendMessage'])->middleware('throttle:20,1')->name('api.chat.send');
 
         Route::get('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'index'])->name('ismuba.index');
-        Route::post('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'store'])->name('ismuba.store');
+        Route::post('/ismuba', [\App\Http\Controllers\IsmubaController::class, 'store'])->middleware('throttle:10,1')->name('ismuba.store');
         Route::put('/ismuba/{article}', [\App\Http\Controllers\IsmubaController::class, 'update'])->name('ismuba.update');
         Route::delete('/ismuba/{article}', [\App\Http\Controllers\IsmubaController::class, 'destroy'])->name('ismuba.destroy');
         Route::get('/ismuba/{article:slug}', [\App\Http\Controllers\IsmubaController::class, 'show'])->name('ismuba.show');
@@ -82,7 +82,8 @@ Route::middleware('auth')->group(function () {
     // Strict Female Students Only Routes (Menstrual Health)
     Route::middleware('female_student')->group(function () {
         Route::get('/menstrual-health', [MenstrualHealthController::class, 'index'])->name('menstrual.index');
-        Route::post('/menstrual-health', [MenstrualHealthController::class, 'store'])->name('menstrual.store');
+        Route::post('/menstrual-health', [MenstrualHealthController::class, 'store'])->middleware('throttle:10,1')->name('menstrual.store');
+        Route::put('/menstrual-health/{record}/finish', [MenstrualHealthController::class, 'finish'])->name('menstrual.finish');
     });
 });
 

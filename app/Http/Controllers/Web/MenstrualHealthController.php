@@ -11,12 +11,33 @@ use Illuminate\Http\RedirectResponse;
 
 class MenstrualHealthController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        // Hanya tarik data milik siswa yang login (IDOR protection)
-        $records = MenstrualRecord::where('siswa_id', auth()->id())
-                    ->orderBy('tanggal_mulai', 'desc')
-                    ->get();
+        $user = auth()->user();
+        $isAdmin = in_array($user->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks']);
+
+        // Jika admin, dapat memilih siswi perempuan dari dropdown
+        $femaleStudents = collect();
+        $selectedSiswaId = null;
+
+        if ($isAdmin) {
+            $femaleStudents = \App\Models\User::where('role', 'siswa')
+                ->where('jenis_kelamin', 'P')
+                ->orderBy('name', 'asc')
+                ->get();
+
+            // Jika ada query parameter siswa_id, gunakan itu. Jika tidak, default ke siswi pertama
+            $selectedSiswaId = $request->query('siswa_id', $femaleStudents->first()?->id);
+        } else {
+            $selectedSiswaId = $user->id;
+        }
+
+        $records = collect();
+        if ($selectedSiswaId) {
+            $records = MenstrualRecord::where('siswa_id', $selectedSiswaId)
+                        ->orderBy('tanggal_mulai', 'desc')
+                        ->get();
+        }
 
         $latestRecord = $records->first();
         
@@ -47,10 +68,12 @@ class MenstrualHealthController extends Controller
         $calendarEvents = $records->map(function($rec) {
             return [
                 'start' => $rec->tanggal_mulai->format('Y-m-d'),
-                // Jika tanggal selesai kosong, anggap cuma 1 hari
+                // Jika tanggal selesai kosong, anggap cuma 1 hari untuk tampilan kalender
                 'end' => $rec->tanggal_selesai ? $rec->tanggal_selesai->format('Y-m-d') : $rec->tanggal_mulai->format('Y-m-d'),
             ];
         })->toArray();
+
+        $selectedStudent = $isAdmin && $selectedSiswaId ? \App\Models\User::find($selectedSiswaId) : null;
 
         return view('menstrual.index', compact(
             'records', 
@@ -58,24 +81,66 @@ class MenstrualHealthController extends Controller
             'daysSinceLastPeriod', 
             'nextPeriodDate', 
             'daysRemaining', 
-            'calendarEvents'
+            'calendarEvents',
+            'isAdmin',
+            'femaleStudents',
+            'selectedSiswaId',
+            'selectedStudent'
         ));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $user = auth()->user();
+        $isAdmin = in_array($user->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks']);
+
+        if (!$isAdmin) {
+            return redirect()->back()->with('error', 'Hanya Admin UKS atau Admin Super yang berwenang menginput data siklus haid.');
+        }
+
         $validated = $request->validate([
+            'siswa_id' => ['required', 'exists:users,id'],
             'tanggal_mulai' => ['required', 'date'],
-            'tanggal_selesai' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
             'tingkat_nyeri' => ['required', 'integer', 'min:1', 'max:5'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Paksa pakai ID siswa yang login (cegah IDOR)
-        $validated['siswa_id'] = auth()->id();
+        // Pastikan target siswa adalah perempuan
+        $targetSiswa = \App\Models\User::findOrFail($validated['siswa_id']);
+        if ($targetSiswa->jenis_kelamin !== 'P') {
+            return redirect()->back()->with('error', 'Pencatatan haid hanya berlaku untuk siswa perempuan.');
+        }
 
-        MenstrualRecord::create($validated);
+        MenstrualRecord::create([
+            'siswa_id' => $targetSiswa->id,
+            'tanggal_mulai' => $validated['tanggal_mulai'],
+            'tanggal_selesai' => null, // Saat baru mulai haid, tanggal selesai belum diisi
+            'tingkat_nyeri' => $validated['tingkat_nyeri'],
+            'catatan' => $validated['catatan'] ?? null,
+        ]);
 
-        return redirect()->back()->with('success', 'Catatan siklus haid berhasil disimpan.');
+        return redirect()->route('menstrual.index', ['siswa_id' => $targetSiswa->id])
+            ->with('success', 'Awal siklus haid berhasil dicatat untuk ' . $targetSiswa->name);
+    }
+
+    public function finish(Request $request, MenstrualRecord $record): RedirectResponse
+    {
+        $user = auth()->user();
+        $isAdmin = in_array($user->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks']);
+
+        if (!$isAdmin) {
+            return redirect()->back()->with('error', 'Hanya Admin UKS atau Admin Super yang berwenang memperbarui tanggal selesai haid.');
+        }
+
+        $validated = $request->validate([
+            'tanggal_selesai' => ['required', 'date', 'after_or_equal:' . $record->tanggal_mulai->format('Y-m-d')],
+        ]);
+
+        $record->update([
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+        ]);
+
+        return redirect()->route('menstrual.index', ['siswa_id' => $record->siswa_id])
+            ->with('success', 'Tanggal selesai haid berhasil diperbarui.');
     }
 }

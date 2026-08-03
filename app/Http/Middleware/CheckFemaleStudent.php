@@ -15,16 +15,22 @@ class CheckFemaleStudent
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $user = auth()->user();
+        
         if (!auth()->check()) {
             return redirect()->route('login');
         }
 
-        $user = auth()->user();
-
-        if ($user->role !== 'siswa' || $user->jenis_kelamin !== 'P') {
-            abort(403, 'Akses Ditolak. Halaman ini khusus privasi siswi.');
+        // Super admin (role super_admin / admin_super) bisa akses tanpa cek gender
+        if (in_array($user->role, ['super_admin', 'admin_super'])) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Siswa dan Admin UKS / Petugas UKS wajib berjenis kelamin P (Perempuan)
+        if (in_array($user->role, ['siswa', 'admin_uks', 'petugas_uks']) && $user->jenis_kelamin === 'P') {
+            return $next($request);
+        }
+
+        abort(403, 'Akses Ditolak. Halaman ini khusus privasi siswi dan pengelola UKS putri.');
     }
 }

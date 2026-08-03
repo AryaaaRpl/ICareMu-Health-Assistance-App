@@ -56,8 +56,8 @@
                         @php
                         $user = auth()->user();
                         $isAdmin = in_array($user->role, ['admin_uks', 'super_admin', 'petugas_uks', 'admin_super']);
-                        $isSiswa = $user->role === 'siswa';
-                        $isFemaleStudent = $user->role === 'siswa' && $user->jenis_kelamin === 'P';
+                        $isSiswa = $user->role === 'siswa'; 
+                        $isFemaleStudent = $user->role === 'siswa' && $user->jenis_kelamin === 'P' || $user->role === 'super_admin' && $user->jenis_kelamin === 'P' || $user->role === 'admin_uks' && $user->jenis_kelamin === 'P'; 
                         @endphp
 
                         <!-- Dashboard Siswa -->

@@ -48,8 +48,7 @@
                 </div>
             </div>
         @endif
-
-        <!-- Success Alert -->
+            <!-- Success / Error Alert -->
         @if(session('success'))
             <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold rounded-2xl flex items-center gap-3">
                 <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,12 +58,46 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-sm font-bold rounded-2xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        <!-- Admin Student Selector Bar -->
+        @if($isAdmin)
+            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-700">
+                        Mode Pengelola UKS / Admin
+                    </span>
+                    <h2 class="text-base font-extrabold text-slate-900">Pilih Siswi yang hendak Diinput / Dipantau</h2>
+                </div>
+                <form method="GET" action="{{ route('menstrual.index') }}" class="w-full sm:w-auto flex items-center gap-3">
+                    <select name="siswa_id" onchange="this.form.submit()" class="w-full sm:w-64 rounded-2xl border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
+                        @forelse($femaleStudents as $fs)
+                            <option value="{{ $fs->id }}" {{ (string)$selectedSiswaId === (string)$fs->id ? 'selected' : '' }}>
+                                {{ $fs->name }} {{ $fs->nisn ? '('.$fs->nisn.')' : '' }}
+                            </option>
+                        @empty
+                            <option value="">Tidak ada data siswi</option>
+                        @endforelse
+                    </select>
+                </form>
+            </div>
+        @endif
+
         <!-- Top Section Grid: Prediction & Relief Tips -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Prediction Card (2 Cols) -->
             <div class="md:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm flex flex-col justify-between space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold uppercase tracking-wider text-rose-500">PREDIKSI HAID BERIKUTNYA</span>
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-rose-500">
+                        PREDIKSI HAID BERIKUTNYA {{ $selectedStudent ? '('.$selectedStudent->name.')' : '' }}
+                    </span>
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
                         Siklus 28 Hari
                     </span>
@@ -75,7 +108,7 @@
                         {{ $nextPeriodDate ? $nextPeriodDate->translatedFormat('l, d F Y') : '-' }}
                     </div>
                     <p class="text-xs text-slate-500 font-medium">
-                        Diperhitungkan otomatis berdasarkan tanggal awal siklus terakhir Anda.
+                        Diperhitungkan otomatis berdasarkan tanggal awal siklus terakhir siswi.
                     </p>
                 </div>
 
@@ -125,8 +158,8 @@
 
         <!-- Interactive Calendar & Form Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Dynamic Interactive Alpine.js Calendar (2 Cols) -->
-            <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
+            <!-- Dynamic Interactive Alpine.js Calendar (2 Cols jika admin, 3 cols jika siswa read-only) -->
+            <div class="{{ $isAdmin ? 'lg:col-span-2' : 'lg:col-span-3' }} bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
                 <!-- Calendar Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div>
@@ -169,15 +202,15 @@
 
                         <template x-for="dateDay in daysInMonth" :key="dateDay.dateStr">
                             <div :class="{
-                                    'bg-gradient-to-tr from-rose-500 to-pink-500 text-white font-black shadow-md ring-2 ring-rose-300': isPeriodDay(dateDay.dateStr),
-                                    'bg-slate-100 text-slate-900 font-bold': isToday(dateDay.dateStr) && !isPeriodDay(dateDay.dateStr),
-                                    'bg-slate-50 text-slate-700 hover:bg-rose-50 font-semibold': !isPeriodDay(dateDay.dateStr) && !isToday(dateDay.dateStr)
-                                 }"
+                                     'bg-gradient-to-tr from-rose-500 to-pink-500 text-white font-black shadow-md ring-2 ring-rose-300': isPeriodDay(dateDay.dateStr),
+                                     'bg-slate-100 text-slate-900 font-bold': isToday(dateDay.dateStr) && !isPeriodDay(dateDay.dateStr),
+                                     'bg-slate-50 text-slate-700 hover:bg-rose-50 font-semibold': !isPeriodDay(dateDay.dateStr) && !isToday(dateDay.dateStr)
+                                  }"
                                  class="h-12 rounded-2xl flex flex-col items-center justify-center relative transition-all text-xs cursor-pointer group">
                                 <span x-text="dateDay.day"></span>
-                                <template x-if="isPeriodDay(dateDay.dateStr)">
+                                {{-- <template x-if="isPeriodDay(dateDay.dateStr)">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white mt-0.5"></span>
-                                </template>
+                                </template> --}}
                             </div>
                         </template>
                     </div>
@@ -196,69 +229,74 @@
                 </div>
             </div>
 
-            <!-- Form Log Siklus Baru (1 Col) -->
-            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-5">
-                <div class="border-b border-slate-100 pb-3">
-                    <h2 class="text-base font-extrabold text-slate-900">Catat Siklus Haid Baru</h2>
-                    <p class="text-xs text-slate-400 font-medium">Masukkan data tanggal dan kondisi nyeri haid Anda</p>
+            <!-- Form Log Siklus Baru (HANYA UNTUK ROLE ADMIN SUPER / ADMIN UKS) -->
+            @if($isAdmin)
+                <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-5">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h2 class="text-base font-extrabold text-slate-900">Catat Mulai Haid Siswi</h2>
+                        <p class="text-xs text-slate-400 font-medium">
+                            Target Siswi: <strong class="text-rose-600">{{ $selectedStudent?->name ?? 'Belum dipilih' }}</strong>
+                        </p>
+                    </div>
+
+                    @if($selectedStudent)
+                        <form action="{{ route('menstrual.store') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
+
+                            <!-- Tanggal Mulai -->
+                            <div class="space-y-1.5">
+                                <label for="tanggal_mulai" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Tanggal Mulai Haid <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="date" id="tanggal_mulai" name="tanggal_mulai" required value="{{ date('Y-m-d') }}"
+                                    class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
+                                <p class="text-[11px] text-slate-400">Menandai bahwa siswi sedang mulai haid pada tanggal ini.</p>
+                            </div>
+
+                            <!-- Tingkat Nyeri -->
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Tingkat Nyeri Haid <span class="text-rose-500">*</span>
+                                </label>
+                                <select name="tingkat_nyeri" required
+                                    class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
+                                    <option value="1">1 - Ringan / Tanpa Nyeri (😊)</option>
+                                    <option value="2">2 - Sedang (😐)</option>
+                                    <option value="3" selected>3 - Cukup Mulas (😣)</option>
+                                    <option value="4">4 - Nyeri Hebat (😫)</option>
+                                    <option value="5">5 - Sangat Hebat / Istirahat UKS (😭)</option>
+                                </select>
+                            </div>
+
+                            <!-- Catatan -->
+                            <div class="space-y-1.5">
+                                <label for="catatan" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Catatan UKS / Gejala <span class="text-slate-400">(Opsional)</span>
+                                </label>
+                                <textarea id="catatan" name="catatan" rows="3" placeholder="Keluhan saat mulai haid..."
+                                    class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-medium text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all"></textarea>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all">
+                                🌸 Simpan Tanggal Mulai Haid
+                            </button>
+                        </form>
+                    @else
+                        <p class="text-xs text-slate-400 text-center py-4">Silakan pilih siswi terlebih dahulu.</p>
+                    @endif
                 </div>
-
-                <form action="{{ route('menstrual.store') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <!-- Tanggal Mulai -->
-                    <div class="space-y-1.5">
-                        <label for="tanggal_mulai" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            Tanggal Mulai <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" id="tanggal_mulai" name="tanggal_mulai" required value="{{ date('Y-m-d') }}"
-                            class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
-                    </div>
-
-                    <!-- Tanggal Selesai -->
-                    <div class="space-y-1.5">
-                        <label for="tanggal_selesai" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            Tanggal Selesai <span class="text-slate-400">(Opsional)</span>
-                        </label>
-                        <input type="date" id="tanggal_selesai" name="tanggal_selesai"
-                            class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
-                    </div>
-
-                    <!-- Tingkat Nyeri -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            Tingkat Nyeri Haid <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="tingkat_nyeri" required
-                            class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
-                            <option value="1">1 - Ringan / Tanpa Nyeri (😊)</option>
-                            <option value="2">2 - Sedang (😐)</option>
-                            <option value="3" selected>3 - Cukup Mulas (😣)</option>
-                            <option value="4">4 - Nyeri Hebat (😫)</option>
-                            <option value="5">5 - Sangat Hebat / Perlu Istirahat UKS (😭)</option>
-                        </select>
-                    </div>
-
-                    <!-- Catatan -->
-                    <div class="space-y-1.5">
-                        <label for="catatan" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            Catatan Gejala <span class="text-slate-400">(Opsional)</span>
-                        </label>
-                        <textarea id="catatan" name="catatan" rows="3" placeholder="Contoh: Kram perut hari pertama, pusing ringan..."
-                            class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-medium text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all"></textarea>
-                    </div>
-
-                    <button type="submit"
-                        class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all">
-                        Simpan Catatan Siklus
-                    </button>
-                </form>
-            </div>
+            @endif
         </div>
 
         <!-- History Table Section -->
         <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h2 class="text-base font-extrabold text-slate-900">Riwayat Catatan Siklus Haid</h2>
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900">Riwayat Catatan Siklus Haid</h2>
+                    <p class="text-xs text-slate-400 font-medium">Menampilkan data resmi yang dicatat oleh Admin UKS / Admin Super</p>
+                </div>
                 <span class="text-xs font-semibold text-slate-400">{{ count($records) }} Catatan Tersimpan</span>
             </div>
 
@@ -268,8 +306,12 @@
                         <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                             <th class="pb-3">Tanggal Mulai</th>
                             <th class="pb-3">Tanggal Selesai</th>
+                            <th class="pb-3">Status Haid</th>
                             <th class="pb-3">Tingkat Nyeri</th>
                             <th class="pb-3">Catatan</th>
+                            @if($isAdmin)
+                                <th class="pb-3 text-right">Aksi Admin</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 text-xs">
@@ -289,7 +331,18 @@
                                     {{ $rec->tanggal_mulai ? $rec->tanggal_mulai->format('d M Y') : '-' }}
                                 </td>
                                 <td class="py-3.5 text-slate-600 font-medium">
-                                    {{ $rec->tanggal_selesai ? $rec->tanggal_selesai->format('d M Y') : 'Berjalan' }}
+                                    {{ $rec->tanggal_selesai ? $rec->tanggal_selesai->format('d M Y') : 'Belum Selesai' }}
+                                </td>
+                                <td class="py-3.5">
+                                    @if($rec->tanggal_selesai)
+                                        <span class="px-2.5 py-1 rounded-full font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">
+                                            ✓ Selesai Haid
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 rounded-full font-bold border border-rose-200 bg-rose-50 text-rose-700 text-[10px] animate-pulse">
+                                            🔴 Sedang Haid
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="py-3.5">
                                     <span class="px-2.5 py-1 rounded-full font-bold border text-[10px] uppercase tracking-wider inline-block {{ $nyeriBadge }}">
@@ -299,11 +352,28 @@
                                 <td class="py-3.5 text-slate-500 font-medium max-w-xs truncate">
                                     {{ $rec->catatan ?: '-' }}
                                 </td>
+                                @if($isAdmin)
+                                    <td class="py-3.5 text-right">
+                                        @if(!$rec->tanggal_selesai)
+                                            <form action="{{ route('menstrual.finish', $rec->id) }}" method="POST" class="inline-flex items-center gap-2">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="date" name="tanggal_selesai" required value="{{ date('Y-m-d') }}"
+                                                    class="rounded-xl border-slate-200 bg-slate-50 py-1 px-2 text-[11px] font-semibold text-slate-900 focus:border-rose-500">
+                                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-xl shadow-sm transition-all">
+                                                    Isi Tanggal Selesai
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="text-[11px] text-slate-400 italic">Tercatat Lengkap</span>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-6 text-center text-slate-400 font-medium">
-                                    Belum ada riwayat siklus yang dicatat. Silakan masukkan data pertama Anda.
+                                <td colspan="{{ $isAdmin ? '6' : '5' }}" class="py-6 text-center text-slate-400 font-medium">
+                                    Belum ada riwayat siklus yang dicatat untuk siswi ini.
                                 </td>
                             </tr>
                         @endforelse

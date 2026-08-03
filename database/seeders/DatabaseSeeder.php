@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => Hash::make('password'),
                 'role' => 'super_admin',
-                'jenis_kelamin' => 'L',
+                'jenis_kelamin' => 'P',
                 'payment_status' => 'paid',
                 'no_wa' => '081234567891',
             ]
