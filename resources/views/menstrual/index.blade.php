@@ -157,7 +157,7 @@
         </div>
 
         <!-- Interactive Calendar & Form Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 {{ $isAdmin ? 'lg:grid-cols-3' : '' }} gap-8">
             <!-- Dynamic Interactive Alpine.js Calendar (2 Cols jika admin, 3 cols jika siswa read-only) -->
             <div class="{{ $isAdmin ? 'lg:col-span-2' : 'lg:col-span-3' }} bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
                 <!-- Calendar Header -->
