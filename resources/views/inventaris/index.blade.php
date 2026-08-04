@@ -152,9 +152,15 @@
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Filter Kategori:</span>
                 <select x-model="categoryFilter" class="bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua Kategori</option>
-                    <option value="Obat">Obat</option>
-                    <option value="Alat Medis">Alat Medis</option>
-                    <option value="Perlengkapan">Perlengkapan</option>
+                    @if(isset($categories) && count($categories) > 0)
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat }}">{{ $cat }}</option>
+                        @endforeach
+                    @else
+                        <option value="Obat">Obat</option>
+                        <option value="Alat Medis">Alat Medis</option>
+                        <option value="Perlengkapan">Perlengkapan</option>
+                    @endif
                 </select>
             </div>
         </div>
@@ -175,7 +181,8 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
                         @foreach($inventaris as $item)
-                            <tr class="hover:bg-slate-50/60 transition duration-150">
+                            <tr x-show="(categoryFilter === '' || '{{ strtolower($item->kategori) }}' === categoryFilter.toLowerCase()) && (search === '' || '{{ strtolower($item->nama_barang . ' ' . ($item->keterangan ?? '')) }}'.includes(search.toLowerCase()))"
+                                class="hover:bg-slate-50/60 transition duration-150">
                                 <!-- Nama Barang -->
                                 <td class="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">
                                     {{ $item->nama_barang }}
@@ -231,7 +238,9 @@
                         @endforeach
                     </tbody>
                 </table>
-                {{ $inventaris->withQueryString()->links() }}
+                @if(method_exists($inventaris, 'links'))
+                    {{ $inventaris->withQueryString()->links() }}
+                @endif
             </div>
 
             <!-- Table Footer -->

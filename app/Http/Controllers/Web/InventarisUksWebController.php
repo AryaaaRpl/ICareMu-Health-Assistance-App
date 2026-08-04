@@ -15,11 +15,28 @@ class InventarisUksWebController extends Controller
     /**
      * Display a listing of inventory items for the current tenant.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $inventaris = InventarisUks::latest()->paginate(10);
+        $query = InventarisUks::query();
 
-        return view('inventaris.index', compact('inventaris'));
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->query('kategori'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+            });
+        }
+
+        $inventaris = $query->latest()->paginate(10);
+
+        // Ambil kategori unik untuk dropdown filter
+        $categories = InventarisUks::select('kategori')->distinct()->pluck('kategori')->filter();
+
+        return view('inventaris.index', compact('inventaris', 'categories'));
     }
 
     /**
