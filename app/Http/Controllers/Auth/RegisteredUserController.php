@@ -42,7 +42,8 @@ class RegisteredUserController extends Controller
 
             // Step 2 & 3: Additional student & tenant wizard fields
             'sekolah_id' => ['required', 'exists:sekolahs,id'],
-            'nisn' => ['nullable', 'string', 'max:20'],
+            'no_wa' => ['nullable', 'string', 'max:20'],
+            'nisn_nbm' => ['nullable', 'string', 'max:30'],
             'nama_wali' => ['nullable', 'string', 'max:255'],
             'no_wa_wali' => ['nullable', 'string', 'max:20'],
             'tinggi_badan' => ['nullable', 'numeric'],
@@ -68,7 +69,7 @@ class RegisteredUserController extends Controller
         ];
 
         // Map wizard fields to user model payload if present
-        $extraFields = ['sekolah_id', 'nisn', 'nama_wali', 'no_wa_wali', 'tinggi_badan', 'berat_badan', 'golongan_darah'];
+        $extraFields = ['sekolah_id', 'no_wa', 'nisn_nbm', 'nama_wali', 'no_wa_wali', 'tinggi_badan', 'berat_badan', 'golongan_darah'];
         foreach ($extraFields as $field) {
             if (array_key_exists($field, $validated)) {
                 $userData[$field] = $validated[$field];

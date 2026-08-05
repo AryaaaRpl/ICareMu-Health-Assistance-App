@@ -35,7 +35,7 @@
                                 {{ $record->siswa->nama_lengkap ?? $record->siswa->name ?? 'Siswa #'.$record->siswa_id }}
                             </h3>
                             <p class="text-xs font-semibold text-slate-400">
-                                Kelas: <span class="text-slate-700 font-bold">{{ $record->siswa->kelas ?? '-' }}</span> | NISN: <span class="text-slate-700 font-bold">{{ $record->siswa->nisn ?? '-' }}</span>
+                                Kelas: <span class="text-slate-700 font-bold">{{ $record->siswa->kelas ?? '-' }}</span> | NISN/NBM: <span class="text-slate-700 font-bold">{{ $record->siswa->nisn_nbm ?? $record->siswa->nisn ?? '-' }}</span>
                             </p>
                         </div>
                     </div>

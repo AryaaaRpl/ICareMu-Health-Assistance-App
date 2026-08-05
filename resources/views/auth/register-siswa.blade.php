@@ -44,10 +44,10 @@
         </div>
 
         <div>
-            <label for="nisn" class="block text-sm font-medium text-gray-700">NISN</label>
-            <input type="text" name="nisn" id="nisn" value="{{ old('nisn') }}"
+            <label for="nisn_nbm" class="block text-sm font-medium text-gray-700">NISN / NBM</label>
+            <input type="text" name="nisn_nbm" id="nisn_nbm" value="{{ old('nisn_nbm') }}"
                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            @error('nisn') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            @error('nisn_nbm') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
         </div>
 
         <div>

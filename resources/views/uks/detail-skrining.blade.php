@@ -39,7 +39,7 @@
                                 {{ $skrining->siswa->nama_lengkap ?? $skrining->siswa->name ?? 'Siswa #'.$skrining->siswa_id }}
                             </h3>
                             <p class="text-xs font-semibold text-slate-400">
-                                Kelas: <span class="text-slate-700 font-bold">{{ $skrining->siswa->kelas ?? '-' }}</span> | NISN: <span class="text-slate-700 font-bold">{{ $skrining->siswa->nisn ?? '-' }}</span>
+                                Kelas: <span class="text-slate-700 font-bold">{{ $skrining->siswa->kelas ?? '-' }}</span> | NISN/NBM: <span class="text-slate-700 font-bold">{{ $skrining->siswa->nisn_nbm ?? $skrining->siswa->nisn ?? '-' }}</span>
                             </p>
                         </div>
                     </div>

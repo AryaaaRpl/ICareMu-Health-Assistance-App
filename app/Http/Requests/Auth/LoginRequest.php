@@ -56,8 +56,8 @@ class LoginRequest extends FormRequest
             $credentials['email'] = $identifier;
             $authenticated = Auth::attempt($credentials, $this->boolean('remember'));
         } else {
-            // Try username, nis, nip
-            foreach (['username', 'nisn', 'nip'] as $field) {
+            // Try username, nisn_nbm, nisn, nip
+            foreach (['username', 'nisn_nbm', 'nisn', 'nip'] as $field) {
                 if (Auth::attempt([$field => $identifier, 'password' => $this->input('password')], $this->boolean('remember'))) {
                     $authenticated = true;
                     break;

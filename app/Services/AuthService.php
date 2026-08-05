@@ -43,7 +43,7 @@ class AuthService
                 'user_id' => $user->id,
                 'sekolah_id' => $data['sekolah_id'],
                 'nama_lengkap' => $data['nama_lengkap'],
-                'nisn' => $data['nisn'],
+                'nisn_nbm' => $data['nisn_nbm'] ?? $data['nisn'] ?? null,
                 'tanggal_lahir' => $data['tanggal_lahir'],
                 'nama_ortu' => $data['nama_ortu'],
                 'no_wa_ortu' => $data['no_wa_ortu'],
@@ -66,9 +66,9 @@ class AuthService
         $user = null;
         $credential = $credentials['credential'];
 
-        // If numeric, attempt authentication via student NISN.
+        // If numeric, attempt authentication via student NISN / NBM.
         if (is_numeric($credential)) {
-            $siswa = Siswa::where('nisn', $credential)->first();
+            $siswa = Siswa::where('nisn_nbm', $credential)->first();
             if ($siswa !== null) {
                 $user = $siswa->user;
             }

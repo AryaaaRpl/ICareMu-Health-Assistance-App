@@ -26,10 +26,10 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'nbm' => [
+            'nisn_nbm' => [
                 'nullable',
                 'string',
-                'max:20',
+                'max:30',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
