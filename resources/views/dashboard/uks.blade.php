@@ -17,12 +17,22 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <a href="{{ route('dashboard.export') }}" target="_blank" class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 border border-white/10 backdrop-blur-md">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Export Laporan PDF
-                    </a>
+                    <form action="{{ route('dashboard.export') }}" method="GET" target="_blank" class="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md">
+                        <div class="flex items-center gap-1.5 px-2">
+                            <label for="start_date" class="text-[11px] font-semibold text-slate-300">Dari:</label>
+                            <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}" class="px-2.5 py-1.5 rounded-xl bg-slate-900/60 text-white text-xs border border-white/10 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                        </div>
+                        <div class="flex items-center gap-1.5 px-2">
+                            <label for="end_date" class="text-[11px] font-semibold text-slate-300">Sampai:</label>
+                            <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}" class="px-2.5 py-1.5 rounded-xl bg-slate-900/60 text-white text-xs border border-white/10 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                        </div>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Export
+                        </button>
+                    </form>
                     <a href="{{ route('rekam-medis.index') }}" class="px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

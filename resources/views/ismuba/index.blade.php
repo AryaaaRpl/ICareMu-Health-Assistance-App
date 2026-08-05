@@ -3,9 +3,9 @@
         openModal: false,
         modalMode: 'create',
         editId: null,
-        form: { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' },
+        form: { judul: '', kategori: 'Fiqih', konten: '', status: 'published' },
         resetForm() {
-            this.form = { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' };
+            this.form = { judul: '', kategori: 'Fiqih', konten: '', status: 'published' };
             this.editId = null;
             this.modalMode = 'create';
         },
@@ -19,7 +19,7 @@
             this.editId = btn.dataset.id;
             this.form = {
                 judul: btn.dataset.judul,
-                kategori: btn.dataset.kategori,
+                kategori: btn.dataset.kategori || 'Fiqih',
                 konten: btn.dataset.konten,
                 status: btn.dataset.status,
             };
@@ -52,8 +52,11 @@
 
         @if(in_array(auth()->user()->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks', 'guru_ismuba']))
             <div class="flex justify-end mb-6">
-                <button @click="openCreate()" class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition">
-                    + Tambah Edukasi ISMUBA
+                <button @click="openCreate()" class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-md flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Tambah Edukasi ISMUBA</span>
                 </button>
             </div>
         @endif
@@ -115,10 +118,10 @@
                 @forelse($artikels as $article)
                     @php
                         $badgeStyle = match($article->kategori) {
-                            'edukasi_kesehatan' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                            'fikih_wanita' => 'bg-pink-50 text-pink-700 border-pink-200',
-                            'kesehatan_mental' => 'bg-purple-50 text-purple-700 border-purple-200',
-                            'artikel_islami' => 'bg-blue-50 text-blue-700 border-blue-200',
+                            'Fiqih', 'fikih_wanita' => 'bg-pink-50 text-pink-700 border-pink-200',
+                            'Aqidah' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'Akhlaq', 'kesehatan_mental' => 'bg-purple-50 text-purple-700 border-purple-200',
+                            'Tarikh', 'artikel_islami' => 'bg-blue-50 text-blue-700 border-blue-200',
                             default => 'bg-slate-50 text-slate-700 border-slate-200',
                         };
 
@@ -137,7 +140,7 @@
                         <div>
                             <!-- Cover Image -->
                             <div class="relative h-48 w-full overflow-hidden bg-slate-100">
-                                <img src="{{ $article->thumbnail ?: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&auto=format&fit=crop&q=80' }}"
+                                <img src="{{ $article->thumbnail ?: ($article->cover ?: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&auto=format&fit=crop&q=80') }}"
                                      alt="{{ $article->judul }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 <div class="absolute top-4 left-4 flex items-center gap-2">
@@ -245,7 +248,7 @@
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900" x-text="modalMode === 'edit' ? 'Edit Artikel/Edukasi' : 'Tambah Artikel/Edukasi'"></h3>
+                        <h3 class="text-lg font-bold text-slate-900" x-text="modalMode === 'edit' ? 'Edit Artikel/Edukasi' : 'Tambah Edukasi ISMUBA'"></h3>
                         <p class="text-xs text-slate-500 mt-0.5" x-text="modalMode === 'edit' ? 'Perbarui konten artikel ISMUBA.' : 'Buat artikel edukasi ISMUBA baru.'"></p>
                     </div>
                     <button @click="openModal = false" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition duration-150">
@@ -256,7 +259,7 @@
                 </div>
 
                 <!-- Modal Form -->
-                <form x-bind:action="modalMode === 'edit' ? '/ismuba/' + editId : '{{ route('ismuba.store') }}'" method="POST" class="p-6 space-y-4">
+                <form x-bind:action="modalMode === 'edit' ? '/ismuba/' + editId : '{{ route('ismuba.store') }}'" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
                     @csrf
                     <input type="hidden" name="_method" x-bind:value="modalMode === 'edit' ? 'PUT' : 'POST'">
 
@@ -274,10 +277,10 @@
                             Kategori <span class="text-rose-500">*</span>
                         </label>
                         <select name="kategori" x-model="form.kategori" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150">
-                            <option value="edukasi_kesehatan">Edukasi Kesehatan</option>
-                            <option value="fikih_wanita">Fikih Wanita</option>
-                            <option value="kesehatan_mental">Kesehatan Mental</option>
-                            <option value="artikel_islami">Artikel Islami</option>
+                            <option value="Fiqih">Fiqih</option>
+                            <option value="Aqidah">Aqidah</option>
+                            <option value="Akhlaq">Akhlaq</option>
+                            <option value="Tarikh">Tarikh</option>
                         </select>
                     </div>
 
@@ -286,7 +289,15 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Konten <span class="text-rose-500">*</span>
                         </label>
-                        <textarea name="konten" x-model="form.konten" rows="8" required placeholder="Tulis konten artikel di sini..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150"></textarea>
+                        <textarea name="konten" x-model="form.konten" rows="6" required placeholder="Tulis konten artikel di sini..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150"></textarea>
+                    </div>
+
+                    <!-- Field: Cover / Gambar -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Cover / Gambar
+                        </label>
+                        <input type="file" name="cover" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition duration-150">
                     </div>
 
                     <!-- Field: Status -->
@@ -306,7 +317,7 @@
                             Batal
                         </button>
                         <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition duration-150">
-                            <span x-text="modalMode === 'edit' ? 'Perbarui Artikel' : 'Simpan Artikel'"></span>
+                            Simpan
                         </button>
                     </div>
                 </form>

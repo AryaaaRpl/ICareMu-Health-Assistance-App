@@ -77,7 +77,7 @@
                     <h2 class="text-base font-extrabold text-slate-900">Pilih Siswi yang hendak Diinput / Dipantau</h2>
                 </div>
                 <form method="GET" action="{{ route('menstrual.index') }}" class="w-full sm:w-auto flex items-center gap-3">
-                    <select name="siswa_id" onchange="this.form.submit()" class="w-full sm:w-64 rounded-2xl border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
+                    <select name="student_id" onchange="this.form.submit()" class="w-full sm:w-64 rounded-2xl border-slate-200 bg-slate-50 py-2.5 px-4 text-xs font-bold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
                         @forelse($femaleStudents as $fs)
                             <option value="{{ $fs->id }}" {{ (string)$selectedSiswaId === (string)$fs->id ? 'selected' : '' }}>
                                 {{ $fs->name }} {{ $fs->nisn ? '('.$fs->nisn.')' : '' }}
@@ -242,6 +242,7 @@
                     @if($selectedStudent)
                         <form action="{{ route('menstrual.store') }}" method="POST" class="space-y-4">
                             @csrf
+                            <input type="hidden" name="student_id" value="{{ $selectedStudent->id }}">
                             <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
 
                             <!-- Tanggal Mulai -->
@@ -252,6 +253,16 @@
                                 <input type="date" id="tanggal_mulai" name="tanggal_mulai" required value="{{ date('Y-m-d') }}"
                                     class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
                                 <p class="text-[11px] text-slate-400">Menandai bahwa siswi sedang mulai haid pada tanggal ini.</p>
+                            </div>
+
+                            <!-- Tanggal Selesai -->
+                            <div class="space-y-1.5">
+                                <label for="tanggal_selesai" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Tanggal Selesai Haid <span class="text-slate-400">(Opsional)</span>
+                                </label>
+                                <input type="date" id="tanggal_selesai" name="tanggal_selesai"
+                                    class="w-full rounded-2xl border-slate-200 bg-slate-50 py-3 px-4 text-xs font-semibold text-slate-900 focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all">
+                                <p class="text-[11px] text-slate-400">Isi tanggal ini jika siklus haid siswi telah selesai.</p>
                             </div>
 
                             <!-- Tingkat Nyeri -->
@@ -280,7 +291,7 @@
 
                             <button type="submit"
                                 class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all">
-                                🌸 Simpan Tanggal Mulai Haid
+                                🌸 Simpan Catatan Haid
                             </button>
                         </form>
                     @else
@@ -325,8 +336,28 @@
                                     5 => 'bg-rose-50 text-rose-600 border-rose-200',
                                     default => 'bg-slate-50 text-slate-600 border-slate-200',
                                 };
+
+                                $durasiHari = '-';
+                                if ($rec->tanggal_mulai) {
+                                    if ($rec->tanggal_selesai) {
+                                        $diff = $rec->tanggal_mulai->diffInDays($rec->tanggal_selesai) + 1;
+                                        $durasiHari = $diff . ' Hari';
+                                    } else {
+                                        $diffNow = $rec->tanggal_mulai->diffInDays(now()) + 1;
+                                        $durasiHari = 'Sedang Berlangsung (' . $diffNow . ' Hari)';
+                                    }
+                                }
+
+                                $recJson = [
+                                    'id' => $rec->id,
+                                    'tanggal_mulai' => $rec->tanggal_mulai ? $rec->tanggal_mulai->format('d M Y') : '-',
+                                    'tanggal_selesai' => $rec->tanggal_selesai ? $rec->tanggal_selesai->format('d M Y') : 'Belum Selesai',
+                                    'durasi' => $durasiHari,
+                                    'tingkat_nyeri' => (int)$rec->tingkat_nyeri,
+                                    'catatan' => $rec->catatan ?: 'Tidak ada catatan khusus.',
+                                ];
                             @endphp
-                            <tr class="hover:bg-slate-50/60 transition-colors">
+                            <tr @click="openDetail(@js($recJson))" class="hover:bg-rose-50/50 cursor-pointer transition-colors group">
                                 <td class="py-3.5 font-bold text-slate-900">
                                     {{ $rec->tanggal_mulai ? $rec->tanggal_mulai->format('d M Y') : '-' }}
                                 </td>
@@ -353,7 +384,7 @@
                                     {{ $rec->catatan ?: '-' }}
                                 </td>
                                 @if($isAdmin)
-                                    <td class="py-3.5 text-right">
+                                    <td class="py-3.5 text-right" @click.stop>
                                         @if(!$rec->tanggal_selesai)
                                             <form action="{{ route('menstrual.finish', $rec->id) }}" method="POST" class="inline-flex items-center gap-2">
                                                 @csrf
@@ -381,6 +412,96 @@
                 </table>
             </div>
         </div>
+
+        <!-- Detail Record Modal UI -->
+        <div x-show="detailModalOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+             style="display: none;">
+
+            <div @click.away="detailModalOpen = false"
+                 x-show="detailModalOpen"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                 class="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden">
+
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-lg shadow-sm">
+                            🌸
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900">Detail Catatan Siklus Haid</h3>
+                            <p class="text-xs text-rose-700 font-medium">Informasi resmi pencatatan kesehatan reproduksi</p>
+                        </div>
+                    </div>
+                    <button @click="detailModalOpen = false" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white/80 transition duration-150">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-5" x-if="selectedRecord">
+                    <!-- Period Info Cards -->
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TANGGAL MULAI</span>
+                            <p class="font-bold text-slate-800 text-sm" x-text="selectedRecord?.tanggal_mulai"></p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">TANGGAL SELESAI</span>
+                            <p class="font-bold text-slate-800 text-sm" x-text="selectedRecord?.tanggal_selesai"></p>
+                        </div>
+                    </div>
+
+                    <!-- Duration & Pain Level Bar -->
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-500">DURASI HAID</span>
+                            <p class="font-black text-rose-700 text-sm" x-text="selectedRecord?.durasi"></p>
+                        </div>
+                        <div class="bg-purple-50/60 p-3.5 rounded-2xl border border-purple-100 space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-500">TINGKAT NYERI</span>
+                            <p class="font-black text-purple-700 text-sm" x-text="'Level ' + selectedRecord?.tingkat_nyeri + ' / 5'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Catatan UKS / Admin -->
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Catatan & Gejala UKS</span>
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium" x-text="selectedRecord?.catatan"></div>
+                    </div>
+
+                    <!-- AI Insight Box -->
+                    <div class="bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 p-4 rounded-2xl border border-purple-100/80 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🤖</span>
+                            <h4 class="text-xs font-bold text-purple-900 uppercase tracking-wider">AI Health Insight & Rekomendasi</h4>
+                        </div>
+                        <p class="text-xs text-purple-800 leading-relaxed font-medium" x-text="getAiInsight(selectedRecord?.tingkat_nyeri)"></p>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                    <button type="button" @click="detailModalOpen = false" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition duration-150">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Alpine.js Calendar Component Script -->
@@ -391,6 +512,22 @@
                 currentYear: new Date().getFullYear(),
                 events: events || [],
                 monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+                detailModalOpen: false,
+                selectedRecord: null,
+
+                openDetail(rec) {
+                    this.selectedRecord = rec;
+                    this.detailModalOpen = true;
+                },
+
+                getAiInsight(level) {
+                    const l = parseInt(level || 1);
+                    if (l <= 1) return 'Nyeri sangat ringan/normal. Pertahankan pola makan bergizi, hidrasi air putih yang cukup, dan aktivitas harian seperti biasa.';
+                    if (l === 2) return 'Nyeri ringan. Disarankan minum air hangat dan melakukan peregangan/olahraga ringan untuk merilekskan otot perut.';
+                    if (l === 3) return 'Nyeri sedang/kram mulas. Disarankan kompres hangat di area perut bawah, istirahat cukup, dan kurangi minuman berkafein.';
+                    if (l === 4) return 'Nyeri cukup hebat. Istirahat di tempat tidur, gunakan kompres air hangat, dan konsumsi herbal/obat pereda nyeri jika direkomendasikan UKS.';
+                    return 'Nyeri sangat hebat/dismenore berat. Disarankan segera istirahat di ruang UKS sekolah dan konsultasikan dengan Dokter UKS.';
+                },
 
                 get monthYearTitle() {
                     return `${this.monthNames[this.currentMonth]} ${this.currentYear}`;

@@ -22,6 +22,7 @@ class ArtikelIsmuba extends Model
         'kategori',
         'konten',
         'thumbnail',
+        'cover',
         'status',
     ];
 

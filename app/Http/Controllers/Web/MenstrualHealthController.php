@@ -26,8 +26,8 @@ class MenstrualHealthController extends Controller
                 ->orderBy('name', 'asc')
                 ->get();
 
-            // Jika ada query parameter siswa_id, gunakan itu. Jika tidak, default ke siswi pertama
-            $selectedSiswaId = $request->query('siswa_id', $femaleStudents->first()?->id);
+            // Jika ada query parameter student_id atau siswa_id, gunakan itu. Jika tidak, default ke siswi pertama
+            $selectedSiswaId = $request->query('student_id', $request->query('siswa_id', $femaleStudents->first()?->id));
         } else {
             $selectedSiswaId = $user->id;
         }
@@ -98,15 +98,23 @@ class MenstrualHealthController extends Controller
             return redirect()->back()->with('error', 'Hanya Admin UKS atau Admin Super yang berwenang menginput data siklus haid.');
         }
 
+        $targetSiswaId = $request->input('student_id') ?? $request->input('siswa_id');
+
         $validated = $request->validate([
-            'siswa_id' => ['required', 'exists:users,id'],
+            'student_id' => ['nullable', 'exists:users,id'],
+            'siswa_id' => ['nullable', 'exists:users,id'],
             'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
             'tingkat_nyeri' => ['required', 'integer', 'min:1', 'max:5'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ]);
 
+        if (!$targetSiswaId) {
+            return redirect()->back()->with('error', 'Siswi belum dipilih.');
+        }
+
         // Pastikan target siswa adalah perempuan
-        $targetSiswa = \App\Models\User::findOrFail($validated['siswa_id']);
+        $targetSiswa = \App\Models\User::findOrFail($targetSiswaId);
         if ($targetSiswa->jenis_kelamin !== 'P') {
             return redirect()->back()->with('error', 'Pencatatan haid hanya berlaku untuk siswa perempuan.');
         }
@@ -114,13 +122,13 @@ class MenstrualHealthController extends Controller
         MenstrualRecord::create([
             'siswa_id' => $targetSiswa->id,
             'tanggal_mulai' => $validated['tanggal_mulai'],
-            'tanggal_selesai' => null, // Saat baru mulai haid, tanggal selesai belum diisi
+            'tanggal_selesai' => $validated['tanggal_selesai'] ?? null,
             'tingkat_nyeri' => $validated['tingkat_nyeri'],
             'catatan' => $validated['catatan'] ?? null,
         ]);
 
-        return redirect()->route('menstrual.index', ['siswa_id' => $targetSiswa->id])
-            ->with('success', 'Awal siklus haid berhasil dicatat untuk ' . $targetSiswa->name);
+        return redirect()->route('menstrual.index', ['student_id' => $targetSiswa->id, 'siswa_id' => $targetSiswa->id])
+            ->with('success', 'Catatan siklus haid berhasil disimpan untuk ' . $targetSiswa->name);
     }
 
     public function finish(Request $request, MenstrualRecord $record): RedirectResponse

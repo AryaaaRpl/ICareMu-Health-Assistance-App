@@ -62,14 +62,15 @@
                                     'admin_super',
                                 ]);
                                 $isSiswa = $user->role === 'siswa';
+                                $isGuruIsmuba = $user->role === 'guru_ismuba';
                                 $isFemaleStudent =
                                     ($user->role === 'siswa' && $user->jenis_kelamin === 'P') ||
                                     ($user->role === 'super_admin' && $user->jenis_kelamin === 'P') ||
                                     ($user->role === 'admin_uks' && $user->jenis_kelamin === 'P');
                             @endphp
 
-                            <!-- Dashboard Siswa -->
-                            @if ($isSiswa || $isAdmin)
+                            <!-- Dashboard -->
+                            @if ($isSiswa || $isAdmin || $isGuruIsmuba)
                                 <a href="{{ route('dashboard') }}" @click="sidebarOpen = false"
                                     class="flex items-center gap-3 px-4 py-3 text-sm font-semibold {{ request()->routeIs('dashboard') ? 'text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl' }} transition-all">
                                     <svg class="w-5 h-5 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-slate-400' }}"
@@ -78,7 +79,7 @@
                                             d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
                                         </path>
                                     </svg>
-                                    <span>Dashboard Siswa</span>
+                                    <span>Dashboard</span>
                                 </a>
                             @endif
 

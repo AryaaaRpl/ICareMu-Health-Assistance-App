@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
@@ -65,5 +66,23 @@ class PaymentController extends Controller
     public function checkout()
     {
         return $this->activation();
+    }
+
+    /**
+     * Handle payment success callback/redirect from Midtrans.
+     */
+    public function finish(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $statusCode = $request->query('status_code');
+        $transactionStatus = $request->query('transaction_status');
+
+        $user = Auth::user();
+
+        if ($user && in_array($transactionStatus, ['settlement', 'capture', 'success'])) {
+            $user->update(['payment_status' => 'paid']);
+        }
+
+        return view('payment.success', compact('orderId', 'statusCode', 'transactionStatus'));
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Sekolah;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -122,24 +123,33 @@ class DashboardController extends Controller
     /**
      * Export UKS monthly health report as PDF download or clean print view.
      */
-    public function exportLaporan()
+    public function exportLaporan(Request $request)
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        $records = RekamMedis::with('siswa')
-            ->where(function ($query) use ($currentMonth, $currentYear) {
-                $query->whereMonth('created_at', $currentMonth)->whereYear('created_at', $currentYear)
-                    ->orWhere(function ($q) use ($currentMonth, $currentYear) {
-                        $q->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
+        $query = RekamMedis::with('siswa');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+            $periode = Carbon::parse($startDate)->translatedFormat('d M Y') . ' - ' . Carbon::parse($endDate)->translatedFormat('d M Y');
+        } else {
+            $currentMonth = now()->month;
+            $currentYear = now()->year;
+
+            $query->where(function ($q) use ($currentMonth, $currentYear) {
+                $q->whereMonth('created_at', $currentMonth)->whereYear('created_at', $currentYear)
+                    ->orWhere(function ($subQ) use ($currentMonth, $currentYear) {
+                        $subQ->whereMonth('tanggal', $currentMonth)->whereYear('tanggal', $currentYear);
                     });
-            })
-            ->latest()
-            ->get();
+            });
+            $periode = now()->translatedFormat('F Y');
+        }
+
+        $records = $query->latest()->get();
 
         $sekolah = Sekolah::first();
         $namaSekolah = $sekolah ? $sekolah->nama_sekolah : 'SMP Negeri 1 Jakarta';
-        $periode = now()->translatedFormat('F Y');
 
         $totalRawat = $records->whereIn('status_penanganan', ['Istirahat di UKS', 'Rawat UKS', 'Dalam Penanganan'])->count();
         $totalRujuk = $records->whereIn('status_penanganan', ['Rujuk ke Puskesmas', 'Dirujuk'])->count();
@@ -155,7 +165,7 @@ class DashboardController extends Controller
         // Check if DomPDF is installed and available
         if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.laporan-uks', $data);
-            return $pdf->download('Laporan-UKS-' . date('Y-m') . '.pdf');
+            return $pdf->download('Laporan-UKS-' . date('Y-m-d') . '.pdf');
         }
 
         // Fallback printable view

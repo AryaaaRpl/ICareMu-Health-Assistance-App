@@ -20,6 +20,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     // Shared Student & Dashboard Route
     Route::get('/activation', [\App\Http\Controllers\PaymentController::class, 'activation'])->name('payment.activation');
+    Route::get('/pembayaran/sukses', [\App\Http\Controllers\PaymentController::class, 'finish'])->name('payment.success');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -28,6 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Notification Routes
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'readAndRedirect'])->name('notifications.read');
 
     // Admin / Petugas UKS Protected Routes
     Route::middleware('role:admin_uks,super_admin,petugas_uks,admin_super')->group(function () {
