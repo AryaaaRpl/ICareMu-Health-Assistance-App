@@ -22,7 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'nbm',
+        'nisn_nbm',
         'password',
         'sekolah_id',
         'role',
@@ -30,7 +30,6 @@ class User extends Authenticatable
         'payment_status',
         'payment_order_id',
         'no_wa',
-        'nisn',
         'nama_wali',
         'no_wa_wali',
         'tinggi_badan',

@@ -85,4 +85,17 @@ class PaymentController extends Controller
 
         return view('payment.success', compact('orderId', 'statusCode', 'transactionStatus'));
     }
+
+    /**
+     * Handle payment failed/cancel callback or view.
+     */
+    public function failed(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $statusCode = $request->query('status_code');
+        $transactionStatus = $request->query('transaction_status', 'failed');
+        $errorMessage = $request->query('error_message');
+
+        return view('payment.failed', compact('orderId', 'statusCode', 'transactionStatus', 'errorMessage'));
+    }
 }

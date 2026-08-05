@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'iCareMu') }} - School Health Dashboard</title>
+    <title>{{ isset($title) ? $title . ' - ' . config('app.name', 'ICareMu') : config('app.name', 'ICareMu') . ' - School Health Assistance' }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,11 +56,11 @@
                             @php
                                 $user = auth()->user();
                                 $isAdmin = in_array($user->role, [
-                                    'admin_uks',
                                     'super_admin',
                                     'petugas_uks',
                                     'admin_super',
                                 ]);
+                                $isUks = $user->role === 'admin_uks';
                                 $isSiswa = $user->role === 'siswa';
                                 $isGuruIsmuba = $user->role === 'guru_ismuba';
                                 $isFemaleStudent =
@@ -83,9 +83,8 @@
                                 </a>
                             @endif
 
-                            <!-- Dashboard UKS (Admin Only) -->
-                            @if ($isAdmin)
-                                <a href="{{ route('dashboard.uks') }}" @click="sidebarOpen = false"
+                            @if ($isUks)
+                            <a href="{{ route('dashboard.uks') }}" @click="sidebarOpen = false"
                                     class="flex items-center gap-3 px-4 py-3 text-sm font-semibold {{ request()->routeIs('dashboard.uks') ? 'text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl' }} transition-all">
                                     <svg class="w-5 h-5 {{ request()->routeIs('dashboard.uks') ? 'text-white' : 'text-slate-400' }}"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +93,10 @@
                                     </svg>
                                     <span>Dashboard UKS</span>
                                 </a>
+                            @endif
 
+                            <!-- Dashboard (Admin Only) -->
+                            @if ($isAdmin)
                                 <!-- School Screening (Admin Only) -->
                                 <a href="{{ route('skrining.index') }}" @click="sidebarOpen = false"
                                     class="flex items-center gap-3 px-4 py-3 text-sm font-semibold {{ request()->routeIs('skrining.*') ? 'text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-xl' }} transition-all">

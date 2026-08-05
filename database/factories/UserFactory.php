@@ -34,7 +34,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'role' => 'siswa',
             'payment_status' => 'paid',
-            'nisn' => (string) $faker->unique()->numberBetween(1000000000, 9999999999),
+            'nisn_nbm' => (string) $faker->unique()->numberBetween(1000000000, 9999999999),
             'nama_wali' => $faker->name(),
             'no_wa_wali' => '08' . $faker->numberBetween(100000000, 999999999),
             'tinggi_badan' => $faker->randomFloat(2, 140, 175),

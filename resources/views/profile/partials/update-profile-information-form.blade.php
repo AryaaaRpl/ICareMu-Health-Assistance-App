@@ -48,9 +48,9 @@
         </div>
 
         <div>
-            <x-input-label for="nbm" :value="__('Nomor Baku Muhammadiyah (NBM)')" />
-            <x-text-input id="nbm" name="nbm" type="text" class="mt-1 block w-full" :value="old('nbm', $user->nbm)" placeholder="Masukkan NBM (Khusus Guru / Admin)" max="20" autocomplete="nbm" />
-            <x-input-error class="mt-2" :messages="$errors->get('nbm')" />
+            <x-input-label for="nisn_nbm" :value="__('NISN / NBM')" />
+            <x-text-input id="nisn_nbm" name="nisn_nbm" type="text" class="mt-1 block w-full" :value="old('nisn_nbm', $user->nisn_nbm)" placeholder="Masukkan NISN atau NBM" max="30" autocomplete="nisn_nbm" />
+            <x-input-error class="mt-2" :messages="$errors->get('nisn_nbm')" />
         </div>
 
         <div class="flex items-center gap-4">

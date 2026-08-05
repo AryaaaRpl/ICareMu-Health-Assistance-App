@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
             $isFemale = $i % 2 === 0;
             $gender = $isFemale ? 'P' : 'L';
             $name = $isFemale ? $faker->name('female') : $faker->name('male');
-            $nisn = sprintf('00%08d', $i + 12345000);
+            $nisn_nbm = sprintf('00%08d', $i + 12345000);
 
             $user = User::factory()->create([
                 'sekolah_id' => $sekolah->id,
@@ -103,7 +103,7 @@ class DatabaseSeeder extends Seeder
                 'email' => "siswa{$i}@icaremu.sch.id",
                 'role' => 'siswa',
                 'jenis_kelamin' => $gender,
-                'nisn' => $nisn,
+                'nisn_nbm' => $nisn_nbm,
                 'nama_wali' => $faker->name(),
                 'no_wa_wali' => '08' . $faker->numberBetween(100000000, 999999999),
                 'no_wa' => '08' . $faker->numberBetween(100000000, 999999999),
@@ -114,7 +114,7 @@ class DatabaseSeeder extends Seeder
                     'user_id' => $user->id,
                     'sekolah_id' => $sekolah->id,
                     'nama_lengkap' => $user->name,
-                    'nisn' => $nisn,
+                    'nisn_nbm' => $nisn_nbm,
                     'tanggal_lahir' => now()->subYears(rand(12, 16))->format('Y-m-d'),
                     'nama_ortu' => $user->nama_wali,
                     'no_wa_ortu' => $user->no_wa_wali,

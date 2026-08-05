@@ -38,11 +38,11 @@ class RegisterSiswaRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
             'nama_lengkap' => ['required', 'string', 'max:255'],
-            'nisn' => [
+            'nisn_nbm' => [
                 'required',
                 'string',
-                'max:20',
-                Rule::unique('siswa')->where(function ($query) {
+                'max:30',
+                Rule::unique('siswa', 'nisn_nbm')->where(function ($query) {
                     return $query->where('sekolah_id', $this->input('sekolah_id'));
                 }),
             ],

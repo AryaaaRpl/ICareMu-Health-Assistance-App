@@ -36,7 +36,7 @@
                      ============================== -->
                 <div x-show="step === 1" x-transition.opacity.duration.300ms>
                     <div class="text-center mb-8">
-                        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Buat Akun Siswa</h2>
+                        <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Buat Akun Baru</h2>
                         <p class="text-sm text-gray-500 mt-2.5 leading-relaxed">Lengkapi data diri Anda untuk bergabung dengan layanan kesehatan ICAREMU.</p>
                     </div>
 
@@ -54,17 +54,33 @@
                             </div>
                         </div>
 
-                        <!-- NISN -->
+                        <!-- NISN / NBM -->
                         <div>
-                            <label for="nisn" class="block text-xs font-semibold text-gray-700 mb-1.5">NISN</label>
+                            <label for="nisn_nbm" class="block text-xs font-semibold text-gray-700 mb-1.5">NISN / NBM</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                     <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
                                     </svg>
                                 </div>
-                                <input type="text" name="nisn" id="nisn" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-11 text-sm border-gray-200 rounded-xl py-3 bg-gray-50/50" placeholder="Nomor Induk Siswa Nasional..." required>
+                                <input type="text" name="nisn_nbm" id="nisn_nbm" value="{{ old('nisn_nbm') }}" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-11 text-sm border-gray-200 rounded-xl py-3 bg-gray-50/50" placeholder="Nomor Induk Baru Nasional / NBM..." required>
                             </div>
+                        </div>
+
+                        <!-- No. WhatsApp Baru -->
+                        <div>
+                            <label for="no_wa" class="block text-xs font-semibold text-gray-700 mb-1.5">No. WhatsApp Baru</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                </div>
+                                <input type="tel" name="no_wa" id="no_wa" value="{{ old('no_wa') }}" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-11 text-sm border-gray-200 rounded-xl py-3 bg-gray-50/50" placeholder="08xx xxxx xxxx" required>
+                            </div>
+                            @error('no_wa')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Jenis Kelamin -->

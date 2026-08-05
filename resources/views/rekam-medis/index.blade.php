@@ -131,7 +131,7 @@
                             @php
                                 $tgl = $row->created_at ? $row->created_at->format('d M Y, H:i') : (isset($row->tanggal) ? (is_string($row->tanggal) ? \Carbon\Carbon::parse($row->tanggal)->format('d M Y') : $row->tanggal->format('d M Y')) : '-');
                                 $namaSiswa = $row->siswa ? ($row->siswa->name ?? $row->siswa->nama_lengkap ?? $row->siswa->nama ?? 'Siswa') : 'Siswa #'.($row->siswa_id ?? '');
-                                $nisnSiswa = $row->siswa ? ($row->siswa->nisn ?? '-') : '-';
+                                $nisnSiswa = $row->siswa ? ($row->siswa->nisn_nbm ?? $row->siswa->nisn ?? '-') : '-';
                                 $suhuVal = (float)($row->suhu_tubuh ?? $row->suhu ?? 36.5);
                                 $isHighTemp = $suhuVal > 37.5;
                                 $gejalaText = is_array($row->gejala) ? implode(', ', $row->gejala) : ($row->gejala ?? $row->keluhan_utama ?? '-');
@@ -152,7 +152,7 @@
                                         </div>
                                         <div>
                                             <div class="font-bold text-slate-900">{{ $namaSiswa }}</div>
-                                            <div class="text-[11px] text-slate-400 font-mono">NISN: {{ $nisnSiswa }}</div>
+                                            <div class="text-[11px] text-slate-400 font-mono">NISN/NBM: {{ $nisnSiswa }}</div>
                                         </div>
                                     </div>
                                 </td>

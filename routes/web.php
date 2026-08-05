@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     // Shared Student & Dashboard Route
     Route::get('/activation', [\App\Http\Controllers\PaymentController::class, 'activation'])->name('payment.activation');
     Route::get('/pembayaran/sukses', [\App\Http\Controllers\PaymentController::class, 'finish'])->name('payment.success');
+    Route::get('/pembayaran/gagal', [\App\Http\Controllers\PaymentController::class, 'failed'])->name('payment.failed');
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
