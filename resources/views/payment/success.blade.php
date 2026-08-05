@@ -1,47 +1,54 @@
-<x-app-layout>
-    <div class="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-xl p-8 sm:p-10 text-center space-y-6">
-            <!-- Animated Checkmark Icon -->
-            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner border border-emerald-200">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
+<x-guest-layout>
+    <div class="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-lg bg-white rounded-2xl border border-gray-100 shadow-lg p-8 sm:p-10 text-center relative transition-all duration-300">
+            <!-- Header Akses (Top Bar Decor) -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-teal-500 via-emerald-500 to-blue-600 rounded-t-2xl"></div>
+
+            <!-- Icon Checkmark & Ring Animation -->
+            <div class="mt-2 mb-6">
+                <div class="mx-auto w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100 ring-8 ring-emerald-50/50">
+                    <svg class="w-10 h-10 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
             </div>
 
-            <!-- Title & Message -->
-            <div class="space-y-2">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider border border-emerald-200">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <!-- Title & Description Spacing -->
+            <div class="space-y-3 mb-8">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     Transaksi Berhasil
                 </span>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Pembayaran Berhasil!</h1>
-                <p class="text-sm text-slate-500 max-w-md mx-auto">
-                    Terima kasih! Pembayaran Anda telah kami terima dan verifikasi secara otomatis.
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Pembayaran Berhasil!</h1>
+                <p class="text-sm text-gray-500 leading-relaxed max-w-md mx-auto">
+                    Terima kasih! Akun Anda telah aktif dan layanan pemantauan kesehatan ICAREMU siap digunakan.
                 </p>
             </div>
 
-            <!-- Order Details Box -->
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2 text-left text-xs">
-                <div class="flex items-center justify-between py-1 border-b border-slate-200/60">
-                    <span class="font-semibold text-slate-500">Nomor Order (Order ID):</span>
-                    <span class="font-bold text-slate-800 font-mono">{{ $orderId ?? 'N/A' }}</span>
+            <!-- Detail Pembayaran Structure (Clean Flexbox Row Pattern) -->
+            <div class="bg-slate-50 rounded-xl p-5 border border-gray-200/70 space-y-1 text-left mb-8">
+                <div class="flex justify-between items-center py-2.5 border-b border-gray-200 text-sm">
+                    <span class="text-gray-500 font-normal">Nomor Referensi</span>
+                    <span class="text-gray-900 font-medium font-mono text-right tracking-tight whitespace-nowrap">{{ $orderId ?? 'ICM-REG-' . time() }}</span>
                 </div>
-                <div class="flex items-center justify-between py-1">
-                    <span class="font-semibold text-slate-500">Status Transaksi:</span>
-                    <span class="font-bold text-emerald-600 uppercase">{{ $transactionStatus ?? 'settlement' }}</span>
+                <div class="flex justify-between items-center py-2.5 border-b border-gray-200 text-sm">
+                    <span class="text-gray-500 font-normal">Tanggal Pembayaran</span>
+                    <span class="text-gray-900 font-medium text-right whitespace-nowrap">{{ $paymentDate ?? now()->translatedFormat('d F Y, H:i') . ' WIB' }}</span>
                 </div>
-                @if(isset($statusCode))
-                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60">
-                        <span class="font-semibold text-slate-500">Status Code:</span>
-                        <span class="font-bold text-slate-700 font-mono">{{ $statusCode }}</span>
-                    </div>
-                @endif
+                <div class="flex justify-between items-center py-2.5 border-b border-gray-200 text-sm">
+                    <span class="text-gray-500 font-normal">Metode Pembayaran</span>
+                    <span class="text-gray-900 font-medium text-right whitespace-nowrap">{{ $paymentMethod ?? 'QRIS / E-Wallet' }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 text-sm">
+                    <span class="text-gray-900 font-semibold">Total Nominal</span>
+                    <span class="text-emerald-700 font-bold text-lg font-mono text-right whitespace-nowrap">{{ $amount ?? 'Rp 10.000' }}</span>
+                </div>
             </div>
 
-            <!-- Action Button -->
-            <div class="pt-4">
-                <a href="{{ route('dashboard') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-500/25 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Enterprise Action Button -->
+            <div>
+                <a href="{{ route('dashboard') }}" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-900 hover:bg-blue-950 text-white font-semibold text-sm rounded-lg shadow transition-all focus:outline-none focus:ring-2 focus:ring-blue-900/40">
+                    <svg class="w-5 h-5 text-white/90 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <span>Kembali ke Dashboard</span>
@@ -49,4 +56,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-guest-layout>

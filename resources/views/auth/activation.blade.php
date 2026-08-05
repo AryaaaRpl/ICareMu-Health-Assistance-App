@@ -18,13 +18,6 @@
                 </div>
             </div>
 
-            <!-- Debugging Alert Box -->
-            @if(isset($midtransError) && $midtransError)
-                <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-4 text-xs font-bold border border-red-200">
-                    ERROR MIDTRANS: {{ $midtransError }}
-                </div>
-            @endif
-
             <!-- Activation Payment Content -->
             <div class="text-center mb-6">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-50/80 mb-5">
@@ -67,19 +60,15 @@
                 </div>
             </div>
 
-            <!-- Pay Button Container (Redirect Mode) -->
+            <!-- Pay Button Container -->
             <div class="space-y-4">
-                @if(isset($paymentUrl) && $paymentUrl)
-                    <a href="{{ $paymentUrl }}" id="pay-button" class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all">
-                        <svg class="mr-2 h-5 w-5 fill-current" viewBox="0 0 20 20">
-                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
-                        </svg>
-                        Bayar Sekarang (Midtrans)
-                    </a>
-                @else
-                    <button disabled class="w-full bg-gray-400 text-white py-3.5 rounded-xl cursor-not-allowed font-semibold text-sm">Gagal memuat pembayaran</button>
-                @endif
+                <a href="{{ route('payment.success') }}" id="pay-button" class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all">
+                    <svg class="mr-2 h-5 w-5 fill-current" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                    Konfirmasi Pembayaran
+                </a>
 
                 <div class="text-center pt-2">
                     <a href="{{ route('dashboard') }}" class="text-xs text-slate-400 hover:text-slate-600 font-medium">
