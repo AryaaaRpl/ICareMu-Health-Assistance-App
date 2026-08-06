@@ -72,6 +72,9 @@ class IsmubaController extends Controller
         if ($request->hasFile('cover')) {
             $path = $request->file('cover')->store('ismuba_covers', 'public');
             $validated['thumbnail'] = '/storage/' . $path;
+        } elseif ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('ismuba_covers', 'public');
+            $validated['thumbnail'] = '/storage/' . $path;
         }
 
         unset($validated['cover']);
@@ -102,6 +105,9 @@ class IsmubaController extends Controller
 
         if ($request->hasFile('cover')) {
             $path = $request->file('cover')->store('ismuba_covers', 'public');
+            $validated['thumbnail'] = '/storage/' . $path;
+        } elseif ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('ismuba_covers', 'public');
             $validated['thumbnail'] = '/storage/' . $path;
         }
 

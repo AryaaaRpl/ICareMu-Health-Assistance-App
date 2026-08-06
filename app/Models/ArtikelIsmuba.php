@@ -26,6 +26,14 @@ class ArtikelIsmuba extends Model
     ];
 
     /**
+     * Get cover image (alias for thumbnail).
+     */
+    public function getCoverAttribute(): ?string
+    {
+        return $this->attributes['thumbnail'] ?? null;
+    }
+
+    /**
      * Get the school (tenant) that owns the article.
      */
     public function sekolah(): BelongsTo

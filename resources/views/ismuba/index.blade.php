@@ -3,9 +3,9 @@
         openModal: false,
         modalMode: 'create',
         editId: null,
-        form: { judul: '', kategori: 'Fiqih', konten: '', status: 'published' },
+        form: { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' },
         resetForm() {
-            this.form = { judul: '', kategori: 'Fiqih', konten: '', status: 'published' };
+            this.form = { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' };
             this.editId = null;
             this.modalMode = 'create';
         },
@@ -19,9 +19,9 @@
             this.editId = btn.dataset.id;
             this.form = {
                 judul: btn.dataset.judul,
-                kategori: btn.dataset.kategori || 'Fiqih',
+                kategori: btn.dataset.kategori || 'edukasi_kesehatan',
                 konten: btn.dataset.konten,
-                status: btn.dataset.status,
+                status: btn.dataset.status || 'published',
             };
             this.openModal = true;
         }
@@ -42,10 +42,7 @@
                     Panduan hidup sehat berbasis Al-Qur'an, As-Sunnah, Thibbun Nabawi, serta konsultasi langsung bersama Asatidz ISMUBA.
                 </p>
             </div>
-            <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         </div>
-
-
 
         @if(in_array(auth()->user()->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks', 'guru_ismuba']))
             <div class="flex justify-end mb-6">
@@ -119,7 +116,7 @@
                             'Aqidah' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Akhlaq', 'kesehatan_mental' => 'bg-purple-50 text-purple-700 border-purple-200',
                             'Tarikh', 'artikel_islami' => 'bg-blue-50 text-blue-700 border-blue-200',
-                            default => 'bg-slate-50 text-slate-700 border-slate-200',
+                            default => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                         };
 
                         $kategoriLabel = match($article->kategori) {
@@ -259,7 +256,9 @@
                 <!-- Modal Form -->
                 <form x-bind:action="modalMode === 'edit' ? '/ismuba/' + editId : '{{ route('ismuba.store') }}'" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
                     @csrf
-                    <input type="hidden" name="_method" x-bind:value="modalMode === 'edit' ? 'PUT' : 'POST'">
+                    <template x-if="modalMode === 'edit'">
+                        <input type="hidden" name="_method" value="PUT">
+                    </template>
 
                     <!-- Field: Judul -->
                     <div>
@@ -275,6 +274,10 @@
                             Kategori <span class="text-rose-500">*</span>
                         </label>
                         <select name="kategori" x-model="form.kategori" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150">
+                            <option value="edukasi_kesehatan">Edukasi Kesehatan</option>
+                            <option value="fikih_wanita">Fikih Wanita</option>
+                            <option value="kesehatan_mental">Kesehatan Mental</option>
+                            <option value="artikel_islami">Artikel Islami</option>
                             <option value="Fiqih">Fiqih</option>
                             <option value="Aqidah">Aqidah</option>
                             <option value="Akhlaq">Akhlaq</option>

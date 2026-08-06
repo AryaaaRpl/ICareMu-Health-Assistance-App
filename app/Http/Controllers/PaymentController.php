@@ -15,8 +15,13 @@ class PaymentController extends Controller
     public function activation()
     {
         $user = Auth::user();
+        
+        $transaction = \App\Models\Transaction::firstOrCreate(
+            ['id' => 1],
+            ['payment_status' => 'menunggu_pembayaran']
+        );
 
-        return view('auth.activation', compact('user'));
+        return view('auth.activation', compact('user', 'transaction'));
     }
 
     /**

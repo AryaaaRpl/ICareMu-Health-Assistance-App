@@ -16,7 +16,15 @@ class TransactionController extends Controller
             'payment_proof' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $transaction = Transaction::findOrFail($id);
+        $transaction = Transaction::find($id);
+        if (!$transaction) {
+            $transaction = new Transaction();
+            if (is_numeric($id) && (int)$id > 0) {
+                $transaction->id = (int)$id;
+            }
+            $transaction->payment_status = 'menunggu_pembayaran';
+            $transaction->save();
+        }
 
         $path = $request->file('payment_proof')->store('proofs', 'public');
 
@@ -24,6 +32,12 @@ class TransactionController extends Controller
             'payment_proof' => $path,
             'payment_status' => 'menunggu_verifikasi',
         ]);
+
+        if (auth()->check()) {
+            auth()->user()->update([
+                'payment_status' => 'menunggu_verifikasi',
+            ]);
+        }
 
         return response()->json([
             'success' => true,

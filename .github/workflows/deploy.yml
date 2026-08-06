@@ -1,0 +1,59 @@
+name: 🚀 Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest # Typo lu udah gw perbaiki di sini
+    
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+    
+    - name: ⚙️ Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        
+    - name: 🗄️ Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: 📦 Install Dependencies (Composer)
+      run: composer install --no-dev --optimize-autoloader
+      
+    - name: 🗄️ Cache NPM packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: 🛠️ Build Frontend Assets (Vite)
+      run: |
+        npm install
+        npm run build
+        
+    - name: 📂 Sync files to cPanel
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/tests/**
+          README.md
+          .env.example
