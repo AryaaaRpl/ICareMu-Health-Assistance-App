@@ -129,7 +129,7 @@ class SkriningController extends Controller
             ->latest()
             ->paginate(10);
 
-        $siswas = class_exists(User::class) ? User::all() : collect();
+        $siswas = class_exists(User::class) ? User::where('role', 'siswa')->get() : collect();
         $jadwals = class_exists(JadwalSkrining::class) ? JadwalSkrining::latest()->get() : collect();
 
         return view('skrining.index', compact('skriningRecords', 'siswas', 'jadwals'));

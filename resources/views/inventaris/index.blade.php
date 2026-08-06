@@ -1,62 +1,70 @@
 <x-app-layout>
     @php
-        // Fallback dummy inventory data if not passed from controller
-        $inventaris = $inventaris ?? [
-            (object)[
-                'id' => 1,
-                'nama_barang' => 'Paracetamol 500mg',
-                'kategori' => 'Obat',
-                'jumlah' => 150,
-                'stok' => 150,
-                'satuan' => 'Tablet',
-                'kondisi' => 'Baik',
-                'keterangan' => 'Stok aman untuk pertolongan demam & pusing.',
-            ],
-            (object)[
-                'id' => 2,
-                'nama_barang' => 'Betadine Antiseptik 60ml',
-                'kategori' => 'Obat',
-                'jumlah' => 5,
-                'stok' => 5,
-                'satuan' => 'Botol',
-                'kondisi' => 'Baik',
-                'keterangan' => 'Stok menipis, perlu pengadaan ulang minggu ini.',
-            ],
-            (object)[
-                'id' => 3,
-                'nama_barang' => 'Termometer Digital Infrared',
-                'kategori' => 'Alat Medis',
-                'jumlah' => 3,
-                'stok' => 3,
-                'satuan' => 'Pcs',
-                'kondisi' => 'Baik',
-                'keterangan' => 'Kondisi baterai penuh, kalibrasi normal.',
-            ],
-            (object)[
-                'id' => 4,
-                'nama_barang' => 'Kasa Steril 16x16 cm',
-                'kategori' => 'Perlengkapan',
-                'jumlah' => 45,
-                'stok' => 45,
-                'satuan' => 'Box',
-                'kondisi' => 'Baik',
-                'keterangan' => 'P3K dasar luka ringan.',
-            ],
-            (object)[
-                'id' => 5,
-                'nama_barang' => 'Tensimeter Anaroid Manual',
-                'kategori' => 'Alat Medis',
-                'jumlah' => 1,
-                'stok' => 1,
-                'satuan' => 'Pcs',
-                'kondisi' => 'Rusak',
-                'keterangan' => 'Manset bocor, menunggu servis / penggantian unit baru.',
-            ],
-        ];
+        $currentSearch = request('search', '');
+        $currentCategory = request('kategori', '');
     @endphp
 
-    <div x-data="{ openModal: false, search: '', categoryFilter: '' }" class="space-y-6">
-        
+    <div x-data="{
+        openModal: false,
+        modalMode: 'create',
+        editId: null,
+        search: @js($currentSearch),
+        kategori: @js($currentCategory),
+        performFilter() {
+            const params = new URLSearchParams(window.location.search);
+            if (this.search && this.search.trim()) {
+                params.set('search', this.search.trim());
+            } else {
+                params.delete('search');
+            }
+            if (this.kategori) {
+                params.set('kategori', this.kategori);
+            } else {
+                params.delete('kategori');
+            }
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.location.href = newUrl;
+        },
+        form: {
+            nama_barang: '',
+            kategori: 'Obat',
+            jumlah: 1,
+            satuan: 'Pcs',
+            kondisi: 'Baik',
+            keterangan: ''
+        },
+        resetForm() {
+            this.form = {
+                nama_barang: '',
+                kategori: 'Obat',
+                jumlah: 1,
+                satuan: 'Pcs',
+                kondisi: 'Baik',
+                keterangan: ''
+            };
+            this.editId = null;
+            this.modalMode = 'create';
+        },
+        openCreate() {
+            this.resetForm();
+            this.openModal = true;
+        },
+        openEdit(item) {
+            this.resetForm();
+            this.modalMode = 'edit';
+            this.editId = item.id;
+            this.form = {
+                nama_barang: item.nama_barang,
+                kategori: item.kategori,
+                jumlah: item.jumlah || item.stok || 0,
+                satuan: item.satuan,
+                kondisi: item.kondisi,
+                keterangan: item.keterangan || ''
+            };
+            this.openModal = true;
+        }
+    }">
+    <div class="space-y-6">
         <!-- Header & Action Button -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <div>
@@ -74,7 +82,7 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <button @click="openModal = true" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition duration-150 transform hover:-translate-y-0.5">
+                <button @click="openCreate()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold rounded-2xl shadow-lg shadow-blue-500/25 transition duration-150 transform hover:-translate-y-0.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -82,16 +90,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Success Flash Message -->
-        @if(session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700 text-xs font-semibold flex items-center gap-3 shadow-xs">
-                <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
 
         <!-- Quick Summary Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -103,7 +101,9 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL ITEM</span>
-                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">{{ count($inventaris) }}</h4>
+                    <h4 class="text-xl font-bold text-slate-900 mt-0.5">
+                        {{ method_exists($inventaris, 'total') ? $inventaris->total() : count($inventaris) }}
+                    </h4>
                     <p class="text-[11px] text-slate-500 font-medium">Jenis Logistik Terdata</p>
                 </div>
             </div>
@@ -145,23 +145,29 @@
                 <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                <input type="text" x-model="search" placeholder="Cari nama barang atau keterangan..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                <input type="text" x-model.debounce.500ms="search" @input="performFilter()" placeholder="Cari nama barang atau keterangan..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
             </div>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Filter Kategori:</span>
-                <select x-model="categoryFilter" class="bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select x-model="kategori" @change="performFilter()" class="bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua Kategori</option>
+                    <option value="Obat" @selected($currentCategory == 'Obat')>Obat</option>
+                    <option value="Alat Medis" @selected($currentCategory == 'Alat Medis')>Alat Medis</option>
+                    <option value="Perlengkapan" @selected($currentCategory == 'Perlengkapan')>Perlengkapan</option>
                     @if(isset($categories) && count($categories) > 0)
                         @foreach($categories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
+                            @if(!in_array($cat, ['Obat', 'Alat Medis', 'Perlengkapan']))
+                                <option value="{{ $cat }}" @selected($currentCategory == $cat)>{{ $cat }}</option>
+                            @endif
                         @endforeach
-                    @else
-                        <option value="Obat">Obat</option>
-                        <option value="Alat Medis">Alat Medis</option>
-                        <option value="Perlengkapan">Perlengkapan</option>
                     @endif
                 </select>
+                @if($currentSearch || $currentCategory)
+                    <a href="{{ route('inventaris.index') }}" class="text-xs font-semibold text-slate-400 hover:text-slate-600 transition">
+                        Reset
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -180,9 +186,8 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
-                        @foreach($inventaris as $item)
-                            <tr x-show="(categoryFilter === '' || '{{ strtolower($item->kategori) }}' === categoryFilter.toLowerCase()) && (search === '' || '{{ strtolower($item->nama_barang . ' ' . ($item->keterangan ?? '')) }}'.includes(search.toLowerCase()))"
-                                class="hover:bg-slate-50/60 transition duration-150">
+                        @forelse($inventaris as $item)
+                            <tr class="hover:bg-slate-50/60 transition duration-150">
                                 <!-- Nama Barang -->
                                 <td class="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">
                                     {{ $item->nama_barang }}
@@ -219,38 +224,52 @@
                                     </p>
                                 </td>
 
-                                <!-- Action (Edit/Delete placeholder buttons) -->
+                                <!-- Action Buttons -->
                                 <td class="py-4 px-6 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button title="Edit" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
+                                        <button @click='openEdit(@json($item))' title="Edit" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-150">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button title="Hapus" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition duration-150">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
+
+                                        <form action="{{ route('inventaris.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus barang ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" title="Hapus" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition duration-150">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+                                    Belum ada data barang inventaris UKS.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
                 @if(method_exists($inventaris, 'links'))
-                    {{ $inventaris->withQueryString()->links() }}
+                    <div class="p-4">
+                        {{ $inventaris->withQueryString()->links() }}
+                    </div>
                 @endif
             </div>
 
             <!-- Table Footer -->
             <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Menampilkan <strong>{{ count($inventaris) }}</strong> barang inventaris</span>
+                <span>Menampilkan <strong>{{ method_exists($inventaris, 'count') ? $inventaris->count() : count($inventaris) }}</strong> barang inventaris</span>
                 <span class="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Logistik UKS</span>
             </div>
         </div>
+        </div>
 
-        <!-- Alpine.js Modal (Form Tambah Barang) -->
+        <!-- Alpine.js Modal (Form Create / Edit Barang) -->
         <div x-show="openModal" 
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
@@ -258,7 +277,7 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
              style="display: none;">
             
             <div @click.away="openModal = false"
@@ -269,13 +288,13 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                 class="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden">
+                 class="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col my-auto overflow-hidden">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900">Tambah Barang Inventaris UKS</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Isi detail obat atau peralatan medis baru.</p>
+                        <h3 class="text-lg font-bold text-slate-900" x-text="modalMode === 'edit' ? 'Edit Barang Inventaris' : 'Tambah Barang Inventaris UKS'"></h3>
+                        <p class="text-xs text-slate-500 mt-0.5" x-text="modalMode === 'edit' ? 'Perbarui data obat atau peralatan medis.' : 'Isi detail obat atau peralatan medis baru.'"></p>
                     </div>
                     <button @click="openModal = false" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition duration-150">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,16 +303,19 @@
                     </button>
                 </div>
 
-                <!-- Native Form targeting route('inventaris.store') -->
-                <form action="{{ route('inventaris.store') }}" method="POST" class="p-6 space-y-4">
+                <!-- Form targeting store or update -->
+                <form :action="modalMode === 'edit' ? '/inventaris/' + editId : '{{ route('inventaris.store') }}'" method="POST" class="p-6 space-y-4 overflow-y-auto">
                     @csrf
+                    <template x-if="modalMode === 'edit'">
+                        <input type="hidden" name="_method" value="PUT">
+                    </template>
 
                     <!-- Field: nama_barang -->
                     <div>
                         <label for="nama_barang" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Nama Barang <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="nama_barang" id="nama_barang" required placeholder="Contoh: Paracetamol 500mg, Betadine" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                        <input type="text" name="nama_barang" id="nama_barang" x-model="form.nama_barang" required placeholder="Contoh: Paracetamol 500mg, Betadine" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
                     </div>
 
                     <!-- Field: kategori -->
@@ -301,7 +323,7 @@
                         <label for="kategori" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Kategori <span class="text-rose-500">*</span>
                         </label>
-                        <select name="kategori" id="kategori" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                        <select name="kategori" id="kategori" x-model="form.kategori" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
                             <option value="Obat">Obat</option>
                             <option value="Alat Medis">Alat Medis</option>
                             <option value="Perlengkapan">Perlengkapan</option>
@@ -315,7 +337,7 @@
                             <label for="jumlah" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                                 Jumlah <span class="text-rose-500">*</span>
                             </label>
-                            <input type="number" name="jumlah" id="jumlah" required min="0" placeholder="10" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                            <input type="number" name="jumlah" id="jumlah" x-model="form.jumlah" required min="0" placeholder="10" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
                         </div>
 
                         <!-- Field: satuan -->
@@ -323,12 +345,13 @@
                             <label for="satuan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                                 Satuan <span class="text-rose-500">*</span>
                             </label>
-                            <select name="satuan" id="satuan" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                            <select name="satuan" id="satuan" x-model="form.satuan" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
                                 <option value="Strip">Strip</option>
                                 <option value="Botol">Botol</option>
                                 <option value="Pcs">Pcs</option>
                                 <option value="Box">Box</option>
                                 <option value="Tablet">Tablet</option>
+                                <option value="Unit">Unit</option>
                             </select>
                         </div>
                     </div>
@@ -338,9 +361,10 @@
                         <label for="kondisi" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Kondisi <span class="text-rose-500">*</span>
                         </label>
-                        <select name="kondisi" id="kondisi" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
-                            <option value="Baik" selected>Baik</option>
+                        <select name="kondisi" id="kondisi" x-model="form.kondisi" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150">
+                            <option value="Baik">Baik</option>
                             <option value="Rusak">Rusak</option>
+                            <option value="Kadaluwarsa">Kadaluwarsa</option>
                         </select>
                     </div>
 
@@ -349,7 +373,7 @@
                         <label for="keterangan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                             Keterangan
                         </label>
-                        <textarea name="keterangan" id="keterangan" rows="3" placeholder="Catatan tambahan mengenai kondisi / kedaluwarsa barang..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150"></textarea>
+                        <textarea name="keterangan" id="keterangan" x-model="form.keterangan" rows="3" placeholder="Catatan tambahan mengenai kondisi / kedaluwarsa barang..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition duration-150 resize-none"></textarea>
                     </div>
 
                     <!-- Modal Actions -->

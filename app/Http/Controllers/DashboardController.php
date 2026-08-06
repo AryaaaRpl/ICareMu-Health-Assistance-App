@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         // 2. Today's Skrining Records for Live Triage Monitor
         $skriningHariIni = \App\Models\SkriningRecord::with(['siswa' => function ($query) {
-            $query->select('id', 'name', 'nama_lengkap', 'kelas');
+            $query->select('id', 'name');
         }])
             ->whereDate('created_at', today())
             ->orderByRaw("

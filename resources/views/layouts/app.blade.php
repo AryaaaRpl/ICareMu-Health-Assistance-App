@@ -251,6 +251,7 @@
             <!-- Main Content Area -->
             <main class="flex-1 p-4 md:p-8 bg-slate-50/5">
                 {{ $slot }}
+                <x-modal-notification />
             </main>
         </div>
     </div>

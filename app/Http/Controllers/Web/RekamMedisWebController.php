@@ -18,16 +18,33 @@ class RekamMedisWebController extends Controller
     /**
      * Display a listing of medical records for the current tenant.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
 
-        $records = RekamMedis::with('siswa')->latest()->paginate(10);
+        $query = RekamMedis::with('siswa')
+            ->when($search, function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->whereHas('siswa', function ($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%")
+                          ->orWhere('nisn_nbm', 'like', "%{$search}%");
+                    })
+                    ->orWhere('keluhan_utama', 'like', "%{$search}%")
+                    ->orWhere('penanganan', 'like', "%{$search}%");
+                });
+            })
+            ->when($statusFilter, function ($q, $status) {
+                $q->where('status', $status);
+            });
+
+        $records = $query->latest()->paginate(10);
         $rekam_medis = $records;
 
-        $totalSkrining = $records->count();
-        $statusNormal = $records->whereIn('status', ['Selesai', 'Selesai / Sehat'])->count();
-        $perluPerhatian = $records->filter(fn($r) => (float)$r->suhu > 37.5 || in_array($r->status, ['Istirahat di UKS', 'Diberi Obat']))->count();
-        $tindakanDirujuk = $records->whereIn('status', ['Dirujuk', 'Dirujuk ke Rumah Sakit / Puskesmas'])->count();
+        $totalSkrining = $records->total();
+        $statusNormal = RekamMedis::whereIn('status', ['Selesai', 'Selesai / Sehat'])->count();
+        $perluPerhatian = RekamMedis::get()->filter(fn($r) => (float)$r->suhu > 37.5 || in_array($r->status, ['Istirahat di UKS', 'Diberi Obat']))->count();
+        $tindakanDirujuk = RekamMedis::whereIn('status', ['Dirujuk', 'Dirujuk ke Rumah Sakit / Puskesmas'])->count();
 
         $siswaList = User::where('role', 'siswa')->orderBy('name', 'asc')->get();
         if ($siswaList->isEmpty()) {

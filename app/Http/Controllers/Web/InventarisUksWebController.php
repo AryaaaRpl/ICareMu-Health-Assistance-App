@@ -24,11 +24,14 @@ class InventarisUksWebController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->query('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_barang', 'like', "%{$search}%")
-                  ->orWhere('keterangan', 'like', "%{$search}%");
-            });
+            $search = trim((string) $request->query('search'));
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_barang', 'LIKE', "%{$search}%")
+                      ->orWhere('kategori', 'LIKE', "%{$search}%")
+                      ->orWhere('keterangan', 'LIKE', "%{$search}%");
+                });
+            }
         }
 
         $inventaris = $query->latest()->paginate(10);
@@ -54,9 +57,41 @@ class InventarisUksWebController extends Controller
         ]);
 
         $validated['stok'] = $validated['jumlah'];
+        $validated['sekolah_id'] = auth()->user()->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
 
         InventarisUks::create($validated);
 
         return redirect()->back()->with('success', 'Data Inventaris UKS berhasil disimpan.');
+    }
+
+    /**
+     * Update the specified inventory item.
+     */
+    public function update(Request $request, InventarisUks $inventaris): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nama_barang' => ['required', 'string', 'max:255'],
+            'kategori' => ['required', 'string', 'max:100'],
+            'jumlah' => ['required', 'integer', 'min:0'],
+            'satuan' => ['required', 'string', 'max:50'],
+            'kondisi' => ['required', 'string', 'max:100'],
+            'keterangan' => ['nullable', 'string'],
+        ]);
+
+        $validated['stok'] = $validated['jumlah'];
+
+        $inventaris->update($validated);
+
+        return redirect()->back()->with('success', 'Data Inventaris UKS berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified inventory item.
+     */
+    public function destroy(InventarisUks $inventaris): RedirectResponse
+    {
+        $inventaris->delete();
+
+        return redirect()->back()->with('success', 'Data Inventaris UKS berhasil dihapus.');
     }
 }

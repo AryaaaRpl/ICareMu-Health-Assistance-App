@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
         // Inventaris UKS
         Route::get('/inventaris', [InventarisUksWebController::class, 'index'])->name('inventaris.index');
         Route::post('/inventaris', [InventarisUksWebController::class, 'store'])->name('inventaris.store');
+        Route::put('/inventaris/{inventaris}', [InventarisUksWebController::class, 'update'])->name('inventaris.update');
+        Route::delete('/inventaris/{inventaris}', [InventarisUksWebController::class, 'destroy'])->name('inventaris.destroy');
     });
 
     // Student & AI Assistant & Edukasi Routes

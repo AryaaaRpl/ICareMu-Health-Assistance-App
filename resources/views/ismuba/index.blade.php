@@ -25,7 +25,9 @@
             };
             this.openModal = true;
         }
-    }" class="space-y-10 max-w-7xl mx-auto pb-12">
+    }" class="max-w-7xl mx-auto pb-12">
+
+    <div class="space-y-10">
         <!-- Hero Header -->
         <div class="relative overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 rounded-3xl p-8 text-white shadow-xl border border-emerald-800/40">
             <div class="relative z-10 space-y-3 max-w-2xl">
@@ -43,12 +45,7 @@
             <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         </div>
 
-        @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-semibold flex items-center justify-between">
-                <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">&times;</button>
-            </div>
-        @endif
+
 
         @if(in_array(auth()->user()->role, ['super_admin', 'admin_super', 'admin_uks', 'petugas_uks', 'guru_ismuba']))
             <div class="flex justify-end mb-6">
@@ -223,6 +220,7 @@
                 @endforelse
             </div>
         </section>
+        </div>
 
         <!-- Alpine.js Modal (Create / Edit) -->
         <div x-show="openModal"

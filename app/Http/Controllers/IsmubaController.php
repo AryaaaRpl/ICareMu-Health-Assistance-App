@@ -62,23 +62,23 @@ class IsmubaController extends Controller
     {
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
-            'kategori' => [
-                'required',
-                Rule::in([
-                    'edukasi_kesehatan',
-                    'fikih_wanita',
-                    'kesehatan_mental',
-                    'artikel_islami',
-                ]),
-            ],
+            'kategori' => ['required', 'string', 'max:100'],
             'konten' => ['required', 'string'],
             'thumbnail' => ['nullable', 'string', 'max:500'],
+            'cover' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
             'status' => ['nullable', Rule::in(['draft', 'published'])],
         ]);
 
+        if ($request->hasFile('cover')) {
+            $path = $request->file('cover')->store('ismuba_covers', 'public');
+            $validated['thumbnail'] = '/storage/' . $path;
+        }
+
+        unset($validated['cover']);
+
         $validated['slug'] = Str::slug($validated['judul']) . '-' . Str::random(5);
         $validated['status'] = $validated['status'] ?? 'published';
-        $validated['sekolah_id'] = TenantContext::getTenantId() ?? auth()->user()->sekolah_id ?? Sekolah::value('id');
+        $validated['sekolah_id'] = TenantContext::getTenantId() ?? auth()->user()->sekolah_id ?? Sekolah::value('id') ?? 1;
 
         ArtikelIsmuba::create($validated);
 
@@ -93,19 +93,19 @@ class IsmubaController extends Controller
     {
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
-            'kategori' => [
-                'required',
-                Rule::in([
-                    'edukasi_kesehatan',
-                    'fikih_wanita',
-                    'kesehatan_mental',
-                    'artikel_islami',
-                ]),
-            ],
+            'kategori' => ['required', 'string', 'max:100'],
             'konten' => ['required', 'string'],
             'thumbnail' => ['nullable', 'string', 'max:500'],
+            'cover' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
             'status' => ['required', Rule::in(['draft', 'published'])],
         ]);
+
+        if ($request->hasFile('cover')) {
+            $path = $request->file('cover')->store('ismuba_covers', 'public');
+            $validated['thumbnail'] = '/storage/' . $path;
+        }
+
+        unset($validated['cover']);
 
         if ($article->judul !== $validated['judul']) {
             $validated['slug'] = Str::slug($validated['judul']) . '-' . Str::random(5);

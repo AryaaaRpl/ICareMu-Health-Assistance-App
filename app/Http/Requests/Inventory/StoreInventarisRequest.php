@@ -25,6 +25,17 @@ class StoreInventarisRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $user = auth()->user();
+        $sekolahId = $user->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
+
+        // Menyuntikkan nilai sekolah_id ke dalam request data
+        $this->merge([
+            'sekolah_id' => $sekolahId,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -32,7 +43,10 @@ class StoreInventarisRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = auth()->user();
+        $sekolahId = $user->sekolah_id ?? \App\Models\Sekolah::value('id') ?? 1;
         return [
+            'sekolah_id' => ['required', 'exists:sekolahs,id'],
             'nama_barang' => ['required', 'string', 'max:255'],
             'kategori' => ['required', 'string', 'max:255'],
             'stok' => ['required', 'integer', 'min:0'],
