@@ -3,9 +3,9 @@
         openModal: false,
         modalMode: 'create',
         editId: null,
-        form: { judul: '', kategori: 'Fiqih', konten: '', status: 'published' },
+        form: { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' },
         resetForm() {
-            this.form = { judul: '', kategori: 'Fiqih', konten: '', status: 'published' };
+            this.form = { judul: '', kategori: 'edukasi_kesehatan', konten: '', status: 'published' };
             this.editId = null;
             this.modalMode = 'create';
         },
@@ -19,9 +19,9 @@
             this.editId = btn.dataset.id;
             this.form = {
                 judul: btn.dataset.judul,
-                kategori: btn.dataset.kategori || 'Fiqih',
+                kategori: btn.dataset.kategori || 'edukasi_kesehatan',
                 konten: btn.dataset.konten,
-                status: btn.dataset.status,
+                status: btn.dataset.status || 'published',
             };
             this.openModal = true;
         }
@@ -44,9 +44,20 @@
         </div>
 
         @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-semibold flex items-center justify-between">
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-semibold flex items-center justify-between shadow-sm">
                 <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">&times;</button>
+                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold">&times;</button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs space-y-1 shadow-sm">
+                <p class="font-bold">Gagal menyimpan artikel:</p>
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -122,7 +133,7 @@
                             'Aqidah' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Akhlaq', 'kesehatan_mental' => 'bg-purple-50 text-purple-700 border-purple-200',
                             'Tarikh', 'artikel_islami' => 'bg-blue-50 text-blue-700 border-blue-200',
-                            default => 'bg-slate-50 text-slate-700 border-slate-200',
+                            default => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                         };
 
                         $kategoriLabel = match($article->kategori) {
@@ -261,7 +272,9 @@
                 <!-- Modal Form -->
                 <form x-bind:action="modalMode === 'edit' ? '/ismuba/' + editId : '{{ route('ismuba.store') }}'" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
                     @csrf
-                    <input type="hidden" name="_method" x-bind:value="modalMode === 'edit' ? 'PUT' : 'POST'">
+                    <template x-if="modalMode === 'edit'">
+                        <input type="hidden" name="_method" value="PUT">
+                    </template>
 
                     <!-- Field: Judul -->
                     <div>
@@ -277,6 +290,10 @@
                             Kategori <span class="text-rose-500">*</span>
                         </label>
                         <select name="kategori" x-model="form.kategori" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition duration-150">
+                            <option value="edukasi_kesehatan">Edukasi Kesehatan</option>
+                            <option value="fikih_wanita">Fikih Wanita</option>
+                            <option value="kesehatan_mental">Kesehatan Mental</option>
+                            <option value="artikel_islami">Artikel Islami</option>
                             <option value="Fiqih">Fiqih</option>
                             <option value="Aqidah">Aqidah</option>
                             <option value="Akhlaq">Akhlaq</option>

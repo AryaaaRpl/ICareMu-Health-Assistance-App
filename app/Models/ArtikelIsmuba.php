@@ -22,9 +22,16 @@ class ArtikelIsmuba extends Model
         'kategori',
         'konten',
         'thumbnail',
-        'cover',
         'status',
     ];
+
+    /**
+     * Get cover image (alias for thumbnail).
+     */
+    public function getCoverAttribute(): ?string
+    {
+        return $this->attributes['thumbnail'] ?? null;
+    }
 
     /**
      * Get the school (tenant) that owns the article.

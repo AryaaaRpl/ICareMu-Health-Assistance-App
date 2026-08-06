@@ -62,19 +62,24 @@ class IsmubaController extends Controller
     {
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
-            'kategori' => [
-                'required',
-                Rule::in([
-                    'edukasi_kesehatan',
-                    'fikih_wanita',
-                    'kesehatan_mental',
-                    'artikel_islami',
-                ]),
-            ],
+            'kategori' => ['required', 'string', 'max:100'],
             'konten' => ['required', 'string'],
-            'thumbnail' => ['nullable', 'string', 'max:500'],
+            'thumbnail' => ['nullable'],
+            'cover' => ['nullable'],
             'status' => ['nullable', Rule::in(['draft', 'published'])],
         ]);
+
+        if ($request->hasFile('cover')) {
+            $path = '/storage/' . $request->file('cover')->store('artikels', 'public');
+            $validated['thumbnail'] = $path;
+        } elseif ($request->hasFile('thumbnail')) {
+            $path = '/storage/' . $request->file('thumbnail')->store('artikels', 'public');
+            $validated['thumbnail'] = $path;
+        } elseif (!empty($request->thumbnail) && is_string($request->thumbnail)) {
+            $validated['thumbnail'] = $request->thumbnail;
+        }
+
+        unset($validated['cover']);
 
         $validated['slug'] = Str::slug($validated['judul']) . '-' . Str::random(5);
         $validated['status'] = $validated['status'] ?? 'published';
@@ -93,19 +98,22 @@ class IsmubaController extends Controller
     {
         $validated = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
-            'kategori' => [
-                'required',
-                Rule::in([
-                    'edukasi_kesehatan',
-                    'fikih_wanita',
-                    'kesehatan_mental',
-                    'artikel_islami',
-                ]),
-            ],
+            'kategori' => ['required', 'string', 'max:100'],
             'konten' => ['required', 'string'],
-            'thumbnail' => ['nullable', 'string', 'max:500'],
+            'thumbnail' => ['nullable'],
+            'cover' => ['nullable'],
             'status' => ['required', Rule::in(['draft', 'published'])],
         ]);
+
+        if ($request->hasFile('cover')) {
+            $path = '/storage/' . $request->file('cover')->store('artikels', 'public');
+            $validated['thumbnail'] = $path;
+        } elseif ($request->hasFile('thumbnail')) {
+            $path = '/storage/' . $request->file('thumbnail')->store('artikels', 'public');
+            $validated['thumbnail'] = $path;
+        }
+
+        unset($validated['cover']);
 
         if ($article->judul !== $validated['judul']) {
             $validated['slug'] = Str::slug($validated['judul']) . '-' . Str::random(5);

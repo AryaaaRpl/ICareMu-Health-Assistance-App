@@ -11,7 +11,6 @@ use App\Models\RekamMedis;
 use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\User;
-use Faker\Factory as Faker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +25,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
 
         // 1. Create 1 Main Tenant (sekolah_id)
         $sekolah = Sekolah::firstOrCreate(
